@@ -77,7 +77,14 @@ register caps). Without `-mllvm -inline-threshold=100000` clang leaves
 | Startup before search (frontier) | 0.90 s (carrier 0.25 s, GPU table build 0.65 s): 0.08% of the window, no lever left. |
 | Throttle state during every run | SW power cap the whole time (450 W, ~2,250 MHz of 3,105 max), no thermal slowdown. Throughput = work per joule. |
 | Diagnostic: cold-bank reads redirected into L2 (wrong math) | +5.77%: upper bound on everything the 4 DRAM reads/candidate cost. |
+| Diagnostic: stage-0 tail + SHA256d replaced by a cheap mix | +6.4% sustained / +7.5% cold: stage-0 SHA share. |
+| Diagnostic: two pubkey SHA-256s replaced by a cheap mix | +8.1% sustained / +8.2% cold: stage-2 SHA share. |
+| Remainder | ~80% is the 11-addition XYZZ chain, recovery and batched inversion. |
 
 Implication: the frontier is power-capped, so a change must cut executed instructions or DRAM energy;
 latency tricks (prefetch, occupancy, extra loads) cost energy and lose. Swapping a cold read for an extra
 point addition (~9% of arithmetic) cannot pay back its ~1.45%.
+
+DRAM cost is nonlinear: 4 random 64 B reads/candidate (~230 GB/s) cost <=5.8%, but GLV10's 10 reads scored
+-55% officially (random-read bandwidth knee), so the fewer-adds/bigger-table direction stays closed.
+The pubkey SHA is already IV-folded, padding-folded, h0-only and FMA-pipe offloaded.
