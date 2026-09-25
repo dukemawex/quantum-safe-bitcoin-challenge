@@ -2,6 +2,7 @@
 # Drive a RunPod RTX 4090 pod over HTTPS only (outbound SSH is blocked here).
 #
 #   RUNPOD_API_KEY=... ./runpod.sh up            # create pod, wait for agent, save state
+#   ./runpod.sh attach [pod-id]                  # join an already-running shared pod instead of up
 #   ./runpod.sh push <variant-name> <dir>        # upload a candidates/pinning copy as a variant
 #   ./runpod.sh sync                             # upload repo (base tree) + lab scripts
 #   ./runpod.sh run '<bash script>'              # run on the pod, stream the log until done
@@ -32,7 +33,7 @@ print(json.dumps({
   "name": "qsb-pinning-ab", "imageName": os.environ.get("IMAGE", "nvidia/cuda:12.8.1-devel-ubuntu24.04"),
   "gpuTypeIds": [os.environ.get("GPU_TYPE", "NVIDIA GeForce RTX 4090")], "gpuCount": 1,
   "cloudType": os.environ.get("CLOUD", "SECURE"), "containerDiskInGb": 30, "volumeInGb": 0,
-  "ports": ["8000/http"], "env": {"AGENT_TOKEN": tok, "AGENT_B64": b64},
+  "ports": ["8000/http"], "allowedCudaVersions": ["12.8", "12.9", "13.0"], "env": {"AGENT_TOKEN": tok, "AGENT_B64": b64},
   "dockerEntrypoint": ["bash", "-c"], "dockerStartCmd": [start],
 }))
 PY
@@ -46,6 +47,19 @@ PY
     sleep 10
   done
   echo "agent did not come up in 15 min; check the pod in the RunPod console, then '$0 down'" >&2; exit 1 ;;
+attach)
+  # Join an already-running shared pod: the agent token is read from the pod's env via the
+  # RunPod API, so it never has to be passed through chat. Optional arg: pod id.
+  api "$API/pods" | python3 -c '
+import json, sys
+want = sys.argv[1] if len(sys.argv) > 1 else None
+pods = [p for p in json.load(sys.stdin) if p.get("desiredStatus") == "RUNNING"
+        and (p["id"] == want if want else p.get("name") == "qsb-pinning-ab")]
+if len(pods) != 1: sys.exit(f"attach: expected 1 running qsb-pinning-ab pod, found {len(pods)}")
+p = pods[0]; tok = (p.get("env") or {}).get("AGENT_TOKEN")
+if not tok: sys.exit("attach: pod has no AGENT_TOKEN in env")
+print("POD_ID=%s\nTOKEN=%s" % (p["id"], tok))' ${2:-} > "$STATE.tmp" && mv "$STATE.tmp" "$STATE" && chmod 600 "$STATE"
+  load; curl -fsS --max-time 15 "$URL/health" >/dev/null && echo "attached to $POD_ID ($URL)" ;;
 sync)
   load
   tar -C "$REPO" --exclude=.git --exclude=.gpu-lab --exclude=benchmark-results --exclude='__pycache__' -czf /tmp/qsb-repo.tgz .

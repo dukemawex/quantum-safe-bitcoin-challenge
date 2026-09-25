@@ -25,6 +25,19 @@ track's only editable path is `candidates/pinning/`.
 | `make_clang_variant.sh` | session | Variant whose embedded sm_89 image is built by clang 18 (LLVM NVPTX) + ptxas 12.8 instead of nvcc |
 | `analyze.py` | pod | Sustained M/s after warm-up per variant, and exact hit-set equality over completed sequences |
 
+## Shared pod (more than one agent)
+
+The pod may be shared. Do **not** run `runpod.sh up` or `down` if one is already running:
+
+```sh
+.gpu-lab/runpod.sh attach        # find the running qsb-pinning-ab pod, read its agent token via the RunPod API
+```
+
+`ab.sh` takes an exclusive `flock` on `/work/gpu.lock` for its whole run, so A/B timings from
+different agents queue instead of overlapping. Use your own variant names (`push <name>`),
+and don't delete other agents' `/work/variants/*` or `/work/runs/*`. Only terminate the pod
+when every agent using it is done.
+
 ## Use
 
 ```sh
