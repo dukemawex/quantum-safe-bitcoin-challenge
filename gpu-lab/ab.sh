@@ -16,6 +16,10 @@ COOL_C=${COOL_C:-45}
 SEED=${SEED:-444838033}
 W=/work
 mkdir -p $W/bin $W/runs
+# The pod is shared between agents: hold an exclusive GPU lock for the whole
+# A/B so two timing runs never overlap (they would corrupt each other's numbers).
+exec 9>$W/gpu.lock
+if ! flock -n 9; then echo "ab.sh: GPU busy (another agent holds $W/gpu.lock), waiting..."; flock 9; fi
 
 if [[ ! -f $W/problem/pinning.bin ]]; then
   python3 $W/repo/harness/gen_problem.py --seed "$SEED" --out-dir $W/problem
