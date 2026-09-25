@@ -22,6 +22,7 @@ track's only editable path is `candidates/pinning/`.
 | `runpod.sh` | session | Create/terminate a 4090 pod; upload repo and variants; run jobs over HTTPS |
 | `pod_agent.py` | pod | Token-authenticated HTTP job agent (outbound SSH is blocked from the session) |
 | `ab.sh` | pod | Build variants with the ranked command, interleaved ABBA runs from a fixed start temperature |
+| `make_clang_variant.sh` | session | Variant whose embedded sm_89 image is built by clang 18 (LLVM NVPTX) + ptxas 12.8 instead of nvcc |
 | `analyze.py` | pod | Sustained M/s after warm-up per variant, and exact hit-set equality over completed sequences |
 
 ## Use
@@ -40,3 +41,17 @@ The native sm_89 image in `qsb_carrier_sm89.h` is what runs on a 4090; after any
 device-code edit rerun `candidates/pinning/build_carrier.sh 24` with CUDA 12.8.
 The toolchain installed by `bootstrap.sh` reproduces the committed image
 byte-for-byte (sha256 f38efa14…, 282,336 bytes).
+
+## clang 18 image (first variant to A/B)
+
+`./make_clang_variant.sh /path/out` copies `candidates/pinning` and regenerates only
+`qsb_carrier_sm89.h` from clang 18.1.3 PTX. Static comparison against the nvcc image:
+
+| Kernel | nvcc 12.8 | clang 18 + ptxas 12.8 |
+|---|---|---|
+| stage 0 prepare | 6,608 SASS, 122 regs, 0 stack | 6,656 SASS, 128 regs, 0 stack |
+| stage 2 finish | 4,128 SASS, 64 regs | 4,128 SASS, 70 regs |
+
+Both keep 3 `LTC64B` table loads and zero spills; occupancy is unchanged (128 and 73
+register caps). Without `-mllvm -inline-threshold=100000` clang leaves
+`_FixedBaseSignedXYZZScalar` as a call with a 160-byte stack frame.

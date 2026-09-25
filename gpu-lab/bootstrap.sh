@@ -26,7 +26,7 @@ git config yukon.challenge '{"id":"f1a40cdb-2170-4f70-9ca2-ef7e2fe4bb20","name":
 
 # Lab tooling lives outside the editable path and is git-excluded, so it can never ride a submission.
 mkdir -p .gpu-lab
-[[ "$LAB" -ef .gpu-lab ]] || cp "$LAB"/{pod_agent.py,ab.sh,analyze.py,runpod.sh,bootstrap.sh,README.md} .gpu-lab/
+[[ "$LAB" -ef .gpu-lab ]] || cp "$LAB"/{pod_agent.py,ab.sh,analyze.py,runpod.sh,bootstrap.sh,make_clang_variant.sh,README.md} .gpu-lab/
 grep -qx '.gpu-lab/' .git/info/exclude || echo '.gpu-lab/' >> .git/info/exclude
 chmod +x .gpu-lab/*.sh
 
@@ -34,7 +34,7 @@ chmod +x .gpu-lab/*.sh
 if [[ ! -x /usr/local/cuda-12.8/bin/nvcc ]]; then
   curl -fsSLO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
   dpkg -i cuda-keyring_1.1-1_all.deb >/dev/null && rm -f cuda-keyring_1.1-1_all.deb
-  apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq cuda-nvcc-12-8 cuda-cudart-dev-12-8 >/dev/null
+  apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq cuda-nvcc-12-8 cuda-cudart-dev-12-8 libcurand-dev-12-8 cuda-cuobjdump-12-8 cuda-nvdisasm-12-8 >/dev/null
 fi
 yukon tracks
 echo "ready: cd $T ; export PATH=/usr/local/cuda-12.8/bin:\$PATH"
