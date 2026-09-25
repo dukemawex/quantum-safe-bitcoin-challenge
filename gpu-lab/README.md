@@ -68,3 +68,16 @@ byte-for-byte (sha256 f38efa14…, 282,336 bytes).
 Both keep 3 `LTC64B` table loads and zero spills; occupancy is unchanged (128 and 73
 register caps). Without `-mllvm -inline-threshold=100000` clang leaves
 `_FixedBaseSignedXYZZScalar` as a call with a 160-byte stack frame.
+
+## Measured on RunPod RTX 4090 (stock 450 W, driver 580.159, CUDA 12.8), 2026-09-25
+
+| Experiment | Result |
+|---|---|
+| clang 18 image vs frontier, 4-round ABBA 180 s, 40 C starts | **-1.00%** (898.2 vs 907.2 M/s sustained; cold 923 vs 931). 17,851 identical hits across 8 runs. Dropped. |
+| Startup before search (frontier) | 0.90 s (carrier 0.25 s, GPU table build 0.65 s): 0.08% of the window, no lever left. |
+| Throttle state during every run | SW power cap the whole time (450 W, ~2,250 MHz of 3,105 max), no thermal slowdown. Throughput = work per joule. |
+| Diagnostic: cold-bank reads redirected into L2 (wrong math) | +5.77%: upper bound on everything the 4 DRAM reads/candidate cost. |
+
+Implication: the frontier is power-capped, so a change must cut executed instructions or DRAM energy;
+latency tricks (prefetch, occupancy, extra loads) cost energy and lose. Swapping a cold read for an extra
+point addition (~9% of arithmetic) cannot pay back its ~1.45%.
