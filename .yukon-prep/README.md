@@ -4,3 +4,4 @@ Prepared Yukon subset submissions (outside the editable path; never archived).
 Both include the regenerated qsb_carrier_sm89.h and the submission note.
 - n3-pair_shared-outer-alu.diff: on top of n1 or n2, extends QSB_PAIR_SHA_ALU_ADD to the outer SHA-256d block (+124 FMA->ALU adds/pair); regenerate the carrier after applying.
 - n1b-vs-a137e28.diff: QSB_PAIR_SHA_ALU_ADD on frontier 9f8a33d8/a137e28 (675.5M); git apply on upstream a137e28 (carrier + note included).
+- n3b-vs-a137e28.diff: N1b + outer SHA-256d ALU adds on a137e28 (second candidate).
