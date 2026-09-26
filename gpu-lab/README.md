@@ -111,3 +111,7 @@ passes the repository's own `setup.sh pinning` + `benchmark.sh pinning` flow: 4,
 known-good runners were busy (i34-9 scoring continuously; terrapinelf `8f2ea1b3` stuck validating since 09:42), and
 my job still failed within a minute, which points to a third runner that fails every job it picks up.
 | `9b5b1359` | re-run: QSB_PHI_HOIST + QSB_TBL_POL_PRED | a137e28 (pinning = cc75e3b, 960.83M) | pending | | | |
+
+**Root cause of the fast Benchmark failures (from the diagnostics artifact of run 36235560942):** the kernel binary returned after 2.5 s with 0 candidates (bridge `wall_s` 2.63; `gpu_wrap.py` does not propagate the binary's exit status, so the bridge shows exit 0). The runner was an RTX 4090 on driver 580.178.04. The carrier's kernel resources match the frontier's exactly, so this is the frontier's memory demand (21.1 GiB GLV table plus 4 slots x 4M-candidate state) not fitting that runner's free VRAM. terrapinelf's `8f2ea1b3` ran the same device code (carrier `9aafe9d7`) with an adaptive batch and scored 967,108,331.
+
+| `231c1d40` | phi hoist + polpred + allocate-or-halve slot allocation (host only, carrier byte-identical) | a137e28 (960.83M) | pending | | | |
