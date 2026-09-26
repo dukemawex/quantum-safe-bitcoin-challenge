@@ -100,3 +100,6 @@ The pubkey SHA is already IV-folded, padding-folded, h0-only and FMA-pipe offloa
 | `9a2d6b57` | QSB_TBL_POL_PRED alone (isolation) | 1968612 (960.83M) | none | n/a | n/a | FAILED at Benchmark 1m40s after submit |
 
 Fast-failure window 09:15-09:30 UTC: i34-9 `a81de57c`/`5e328f13` and my `07f9413e`/`aabc3509`/`9a2d6b57` all failed at Benchmark within ~2 min, while full ~20-min runs scored in between (IvanLudvig `fe9e1fa7` at 09:18). That fits one runner failing every job it picks up. The three failed builds differ (phi hoist; phi hoist + policy; policy only), and all use the same carrier rebuild process as the successful `2f2d285a`. Holding resubmission until another solver scores again.
+
+09:40 UTC: terrapinelf `f6d7bbb9` scored 959.0M (a full run), so the runner pool is working again.
+| `cff08464` | re-run of `aabc3509` (QSB_PHI_HOIST + QSB_TBL_POL_PRED) | 1968612/a137e28 (960.83M; pinning tree unchanged) | pending | | | |
