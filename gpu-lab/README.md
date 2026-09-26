@@ -133,3 +133,9 @@ Runner classes: every score >= 950M came from fast-class runs (elapsed ~1201.4-1
 
 | `6e8b78f6` | 64Ki sub-batches (16 MiB ring) + L2 discard | e892e6e | cancelled | | | cancelled before scoring (directionally inconsistent with root-latency hypothesis below) |
 | `0c8b0ffd` | QSB_SUBRING 4->6 (deepen sub-batch ring) + L2 discard | e892e6e (979.22M) | pending | | | rationale: ring-depth curve (terrapinelf: depth3 -2.6% vs depth4), L2-window insensitivity, jacklightChen's a6e67fd4 (root-kernel-only swap) scoring 982.6M all point at root-inversion latency as the bottleneck, not L2 capacity |
+
+| `0c8b0ffd` | result | e892e6e | 913,807,983 | 1200.98 (slow) | 130,828 | rejected; slow-class run, inconclusive (within the 902-926M slow-class noise band for any source) |
+
+**Field converging near the bar (checked before next submission):** three other unpromoted submissions on this frontier scored 977-988M with three different mechanisms, none clearing +1%: jacklightChen `a6e67fd4` (982.6M, replaced fused root kernel with register-tree/cyclic-field inverse), ercumentyildirim `6cf007af` (987.1M), terrapinelf `e9ac8d73` (988.6M, closest yet -- changed QSB_PMIX12 16->32, QSB_PMIX12_WARP 1->0 (block-uniform), QSB_PMIX12_N 2->1; also reverted the register-tree root kernel back to plain fused roots). PMIX12 controls the GLV12-P warp-mix ratio (trades DRAM gathers for compute); the frontier's own comment says per-warp spreading (WARP=1) exists specifically for SM-occupancy balance, which terrapinelf's near-miss gave up.
+
+| `cf6ce87a` | QSB_PMIX12 16->32, QSB_PMIX12_N 2->1, QSB_PMIX12_WARP kept at 1 (frontier's per-warp spreading, at terrapinelf's near-miss ratio) | e892e6e (979.22M) | pending | | | tests whether per-warp spreading recovers the gap between terrapinelf's 988.6M and the ~989.0M bar |
