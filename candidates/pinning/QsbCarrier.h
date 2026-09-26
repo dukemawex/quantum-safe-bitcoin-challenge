@@ -143,7 +143,9 @@ static cudaError_t qsb_carrier_launch(void (*)(P...), int kid, dim3 g, dim3 b, c
     return e;
 }
 
-/* cudaMemcpyToSymbol that targets the carrier image's copy of the symbol when it is on. */
+/* cudaMemcpyToSymbol into the carrier image's copy of the symbol when it is on, and always
+ * into the compute_52 image's copy: kernels that stay on the compute_52 image (the leaf-tree
+ * pair) then read the same constants as the carrier kernels. */
 template <class T>
 static cudaError_t qsb_to_symbol(const T &sym, const char *name, const void *src, size_t n) {
     if (g_qsb_carrier.on) {
@@ -151,7 +153,8 @@ static cudaError_t qsb_to_symbol(const T &sym, const char *name, const void *src
         cudaError_t e = cudaLibraryGetGlobal(&d, &sz, g_qsb_carrier.lib, name);
         if (e != cudaSuccess) return e;
         if (n > sz) return cudaErrorInvalidValue;
-        return cudaMemcpy(d, src, n, cudaMemcpyHostToDevice);
+        e = cudaMemcpy(d, src, n, cudaMemcpyHostToDevice);
+        if (e != cudaSuccess) return e;
     }
     return cudaMemcpyToSymbol(sym, src, n);
 }

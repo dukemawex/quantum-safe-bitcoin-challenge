@@ -72,24 +72,6 @@
 #ifndef QSB_SLOT_PIPELINE
 #define QSB_SLOT_PIPELINE 1
 #endif
-/* QSB_HOST_PRODUCERS (kill switch): 1 = build each batch's epoch descriptors and first-block
- * states on up to 3 host threads (tests/gpu_epochs/host_producers.h) and upload them in front of
- * kernel_digest instead of running kernel_epoch_groups / kernel_build_epochs_inc /
- * kernel_build_first_flat; start-up self-check against the GPU producers, per-batch GPU fallback,
- * watchdog. Host-only: the device code is unchanged. 0 = GPU producers only. */
-#ifndef QSB_HOST_PRODUCERS
-#define QSB_HOST_PRODUCERS 1
-#endif
-/* QSB_TRACE_START (diagnostic, default 0): print launch times of batches 0,1,2,4,..,64 in ms since
- * process start (stderr), to compare start-up latency between builds. */
-#ifndef QSB_TRACE_START
-#define QSB_TRACE_START 0
-#endif
-#if QSB_TRACE_START
-#include <time.h>
-static double qsb_trace_now() { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec + t.tv_nsec * 1e-9; }
-static const double qsb_trace_t_start = qsb_trace_now();
-#endif
 /* QSB_TABLE_L2_WINDOW (host-only kill switch): 1 = a persisting-L2
  * access-policy window over the fixed-base table on every stream the digest
  * runs on, clipped to the device's persisting-L2 limit and maximum window
@@ -977,34 +959,6 @@ __host__ __device__ __forceinline__ uint32_t qsb_s3_code(qsb_s3_walker &w, int t
     return (d.off + idx) | (((nm & 1u) ^ sign) << 31);
 }
 // END QSB_S3_HOST_EXACT
-/* QSB_S3_HALF_WALK: the same codes with half the walker shifts. Q's six widths tile exactly its 128
- * bits (every Q field ends at or below bit 127), so no Q field ever reads a bit of P: the Q half shifts
- * only w[0..3] and P waits unshifted in w[4..7]. After term QSB_S3_PSI_TERM-1 the 256-bit walker holds
- * exactly P in w[0..3] and zero in w[4..7]; qsb_s3_psi_swap makes w[0..3] = P there, and from then on
- * w[4..7] of the 256-bit walker are zero, so shifting w[0..3] alone is again the same value. 4 funnel
- * shifts per term instead of 8; qsb_s3_selfcheck runs this form against q9_bigtbl_code too. */
-#ifndef QSB_S3_HALF_WALK
-#define QSB_S3_HALF_WALK 1
-#endif
-__host__ __device__ __forceinline__ uint32_t qsb_s3_code_half(qsb_s3_walker &w, int t, const qsb_s3_desc_t d) {
-    const uint32_t f = w.w[0] & d.mask;
-    const uint32_t dig = 2u * f + 1u - d.centre;
-    const uint32_t nm = (uint32_t)((int32_t)dig >> 31);
-    const uint32_t idx = ((dig ^ nm) - nm - 1u) >> 1;
-    const uint32_t sign = (w.signs >> (t >= QSB_S3_PSI_TERM ? 1 : 0)) & 1u;
-    #pragma unroll
-    for (int i = 0; i < 3; i++) w.w[i] = qsb_s3_shr(w.w[i], w.w[i + 1], d.width);
-    w.w[3] >>= d.width;
-    return (d.off + idx) | (((nm & 1u) ^ sign) << 31);
-}
-__host__ __device__ __forceinline__ void qsb_s3_psi_swap(qsb_s3_walker &w) {
-    w.w[0] = w.w[4]; w.w[1] = w.w[5]; w.w[2] = w.w[6]; w.w[3] = w.w[7];
-}
-#if QSB_S3_HALF_WALK
-#define QSB_S3_CODE qsb_s3_code_half
-#else
-#define QSB_S3_CODE qsb_s3_code
-#endif
 /* Table point for a code: segments 0-3 (inside the pinned L2 window) with the ordinary read-only load,
  * segments 4-5 (DRAM) with evict-first ld.global.cs so the 9 GiB stream does not displace the rest of
  * the kernel's L2 working set (S-P1 probe: plain loads at these footprints put subset in a stall regime).
@@ -1051,27 +1005,15 @@ __device__ void qsb_filter_chain_trial(uint64_t *X, uint64_t *Y, uint64_t *ZZ, u
     qsb_s3_walker w;
     qsb_s3_begin(w, mag[0], sgn[0], mag[1], sgn[1]);
     uint64_t x0[4], y0[4], x1[4], y1[4];
-    uint32_t code = QSB_S3_CODE(w, 0, QSB_S3_DESC[0]);
+    uint32_t code = qsb_s3_code(w, 0, QSB_S3_DESC[0]);
     qsb_s3_load(gTable, code, false, x0, y0);
-    code = QSB_S3_CODE(w, 1, QSB_S3_DESC[1]);
+    code = qsb_s3_code(w, 1, QSB_S3_DESC[1]);
     qsb_s3_load(gTable, code, false, x1, y1);
     qsb_filter_point_seed(X, Y, ZZ, ZZZ, x0, y0, x1, y1, bad);
     uint64_t cx[4], cy[4];
     #pragma unroll 1
     for (int t = 2; t < GT_GLV_TERMS - 1; t++) {
         const qsb_s3_desc_t d = QSB_S3_DESC[t];
-#if QSB_S3_HALF_WALK
-        /* P enters w[0..3] before its first field is read; the psi scale rides in the same branch
-         * (it only has to precede this term's addition). */
-        if (t == QSB_S3_PSI_TERM) {
-            qsb_s3_psi_swap(w);
-            const uint64_t beta[4] = {0xC1396C28719501EEULL, 0x9CF0497512F58995ULL,
-                                      0x6E64479EAC3434E9ULL, 0x7AE96A2B657C0710ULL};
-            qsb_filter_mul(X, X, beta, bad);
-        }
-        code = qsb_s3_code_half(w, t, d);
-        qsb_s3_load(gTable, code, d.off >= GT_DENSE_ENTRIES, cx, cy);
-#else
         code = qsb_s3_code(w, t, d);
         qsb_s3_load(gTable, code, d.off >= GT_DENSE_ENTRIES, cx, cy);
         if (t == QSB_S3_PSI_TERM) {
@@ -1081,13 +1023,12 @@ __device__ void qsb_filter_chain_trial(uint64_t *X, uint64_t *Y, uint64_t *ZZ, u
                                       0x6E64479EAC3434E9ULL, 0x7AE96A2B657C0710ULL};
             qsb_filter_mul(X, X, beta, bad);
         }
-#endif
         qsb_filter_point_add<true>(X, Y, ZZ, ZZZ, cx, cy, y0, bad);
 #if !QSB_CHAIN_ANCHOR_UPDATE
         Load256(y0, cy);                /* current affine y anchors next madd */
 #endif
     }
-    code = QSB_S3_CODE(w, GT_GLV_TERMS - 1, QSB_S3_DESC[GT_GLV_TERMS - 1]);
+    code = qsb_s3_code(w, GT_GLV_TERMS - 1, QSB_S3_DESC[GT_GLV_TERMS - 1]);
     qsb_s3_load(gTable, code, true, cx, cy);
     qsb_filter_last_add(X, Y, ZZ, ZZZ, cx, cy, y0, bad);
 }
@@ -2872,13 +2813,10 @@ static int qsb_s3_selfcheck(void) {
         }
         const unsigned sp = it & 1, sq = (it >> 1) & 1;
         qsb_s3_walker w; qsb_s3_begin(w, m[0], sp, m[1], sq);
-        qsb_s3_walker h; qsb_s3_begin(h, m[0], sp, m[1], sq);
         for (int t = 0; t < 12; t++) {
             const uint32_t got = qsb_s3_code(w, t, desc[t]);
             const uint32_t want = t < 6 ? q9_bigtbl_code(m[1], sq, t) : q9_bigtbl_code(m[0], sp, t - 6);
             if (got != want) return 0;
-            if (t == QSB_S3_PSI_TERM) qsb_s3_psi_swap(h);
-            if (qsb_s3_code_half(h, t, desc[t]) != want) return 0;
         }
     }
     return 1;
@@ -3309,10 +3247,6 @@ static void unrank_combo_host(uint64_t rank, int n, int t, uint8_t *out) {
 #if QSB_HOST_VERIFY
 static uint8_t g_hv_win3[QSB_SE_PER_EPOCH][QSB_SE_TWIN];
 #include "qsb_host_verify.h"
-#if QSB_HOST_PRODUCERS && QSB_SLOT_PIPELINE && ZLAB_HITPATH
-#include "host_producers.h"
-#define QSB_HP_ON 1
-#endif
 /* QSB_CPU_GRIND: host-CPU co-grinding on candidates disjoint from the GPU's (CpuGrindSubset.h). */
 #ifndef QSB_CPU_GRIND
 #define QSB_CPU_GRIND 1
@@ -3466,7 +3400,7 @@ static void qsb_table_l2_window(cudaStream_t *streams, int n_streams,
     QSB_CARRIER_KV(QSB_NEGFOLD_PARITY) QSB_CARRIER_KV(QSB_NEG_SHORT) QSB_CARRIER_KV(QSB_PAIR_SHARED) \
     QSB_CARRIER_KV(QSB_PAIR_SHA_UNROLL_CONST) QSB_CARRIER_KV(QSB_PAIR_SHA_UNROLL_CONST_INNER) \
     QSB_CARRIER_KV(QSB_PAIR_SHA_UNROLL_WINDOW) QSB_CARRIER_KV(QSB_GLV_LEAN) QSB_CARRIER_KV(QSB_GLV_ROUND_CC) QSB_CARRIER_KV(QSB_GLV_HIGH15_HI) QSB_CARRIER_KV(QSB_PREFIX_BLOCKS) \
-    QSB_CARRIER_KV(QSB_R_CBANK) QSB_CARRIER_KV(QSB_S3_HALF_WALK) QSB_CARRIER_KV(QSB_ROOT_MAX_BATCHES) QSB_CARRIER_KV(QSB_SHA_ALU_ADD) \
+    QSB_CARRIER_KV(QSB_R_CBANK) QSB_CARRIER_KV(QSB_ROOT_MAX_BATCHES) QSB_CARRIER_KV(QSB_SHA_ALU_ADD) \
     QSB_CARRIER_KV(QSB_SHA_FMA_ADD) QSB_CARRIER_KV(QSB_SHA_FMA_ROT) QSB_CARRIER_KV(QSB_SHA_UNROLL_CONST) \
     QSB_CARRIER_KV(QSB_SHORT_CARRY) QSB_CARRIER_KV(QSB_SHORT_CARRY2) \
     QSB_CARRIER_KV(QSB_SHORT_CARRY2_SENTINEL) QSB_CARRIER_KV(QSB_SHORT_CARRY3) \
@@ -3990,10 +3924,6 @@ int main(int argc, char **argv) {
         memcpy(g_hv_win3, h_win3, sizeof(h_win3));
 #endif
         if (qsb_prepare_window_schedule(dp.dummy_sigs, h_win3, h_const_words)) return 1;
-#ifdef QSB_HP_ON
-        qhp::start(&dp, window_start, s_early, qsb_first_class_count, n_epochs,
-                   (uint64_t)QSB_SE_LAUNCH_BLOCKS * QSB_PAIR_MUL);
-#endif
         cudaMalloc(&d_epochs, (size_t)QSB_SE_LAUNCH_BLOCKS * QSB_PAIR_MUL * sizeof(epoch_desc_t));
         if (!d_epochs) { fprintf(stderr, "OOM: epoch descriptors\n"); return 1; }
 #if QSB_EPOCH_GROUPS
@@ -4395,24 +4325,7 @@ int main(int argc, char **argv) {
             uint8_t *combos = d_hb + 8;
             const int nblk = (epochs_in_batch + QSB_PAIR_MUL - 1) / QSB_PAIR_MUL;
             const int batch_pos = nblk * QSB_SE_BLOCK;
-#if QSB_TRACE_START
-            if ((sp_batch_no & (sp_batch_no - 1)) == 0 && sp_batch_no <= 64)
-                fprintf(stderr, "TRACE launch %llu at %.1f ms\n", (unsigned long long)sp_batch_no, (qsb_trace_now() - qsb_trace_t_start) * 1e3);
-#endif
-#ifdef QSB_HP_ON
-            /* Host producers: release finished uploads, then take this batch from the host if it
-             * is ready (else the GPU producers below build it). */
-            qhp::poll();
-            qhp::Slot *hp_slot = qhp::acquire((int64_t)sp_batch_no);
-            if (hp_slot) {
-                /* The upload replaces all three producers, including epochs_inc's reset of this
-                 * slot's tentative count. */
-                cudaError_t he = cudaMemsetAsync(cnt, 0, sizeof(uint32_t), st);
-                if (he == cudaSuccess) he = qhp::upload(hp_slot, st, d_ep, d_fi, (size_t)QSB_FIRST_SLOTS * 8 * sizeof(uint32_t), epochs_in_batch);
-                if (he != cudaSuccess) { printf("CUDA error: %s (host producer upload)\n", cudaGetErrorString(he)); return 1; }
-            } else
-#endif
-            {{
+            {
                 uint8_t h_o[MAX_T];
                 qsb_host_unrank(base, window_start, s_early, h_o);
                 const uint64_t r5a = qsb_host_rank(h_o, s_early - 1, window_start);
@@ -4467,11 +4380,6 @@ int main(int argc, char **argv) {
               if (!qsb_carrier_try(kernel_build_first_flat, QK_BFF, dim3((nthr + 255) / 256), dim3(256), st,
                       d_ep, d_fi, (unsigned)epochs_in_batch, (unsigned)qsb_first_class_count))
               kernel_build_first_flat<<<(nthr + 255) / 256, 256, 0, st>>>(d_ep, d_fi, (unsigned)epochs_in_batch, (unsigned)qsb_first_class_count); }
-#ifdef QSB_HP_ON
-            if (sp_batch_no == 0)   /* start-up self-check: device copy of the GPU-built batch 0, stream-ordered */
-                qhp::enqueue_check_copy(st, d_ep, d_fi, (size_t)QSB_FIRST_SLOTS * 8 * sizeof(uint32_t));
-#endif
-            }
             if (!qsb_carrier_try(kernel_digest, QK_DIG, dim3(nblk), dim3(QSB_SE_BLOCK), st,
                 (const uint8_t*)NULL, n_pool, t_sel,
                 d_mid,
@@ -4505,7 +4413,6 @@ int main(int argc, char **argv) {
             if (err == cudaSuccess) err = cudaEventRecord(sp_done[s], st);
             if (err == cudaSuccess) err = cudaGetLastError();
             if (err != cudaSuccess) { printf("CUDA error: %s (batch %llu enqueue)\n", cudaGetErrorString(err), (unsigned long long)sp_batch_no); return 1; }
-
             sp_busy[s] = 1;
             sp_epochs[s] = epochs_in_batch;
             return 0;
@@ -4539,11 +4446,6 @@ int main(int argc, char **argv) {
                        (unsigned long long)(total_searched/1000000),
                        (unsigned long long)(global_total/1000000),
                        rate/1e6, elapsed_total);
-#ifdef QSB_HP_ON
-                { uint64_t hb, fb; int hst; qhp::stats(&hb, &fb, &hst);
-                  if (hst != -2) printf("  [HP] host-built batches %llu, GPU-built after start-up %llu, host producers %s\n",
-                                        (unsigned long long)hb, (unsigned long long)fb, hst == 1 ? "on" : hst == 0 ? "pending" : "off"); }
-#endif
                 fflush(stdout);
                 if (summary_f) {
                     time_t now_epoch = time(NULL);
@@ -4555,12 +4457,6 @@ int main(int argc, char **argv) {
                 t_last_se = t_now;
             }
         }
-#ifdef QSB_HP_ON
-        qhp::shutdown();
-        { uint64_t hb, fb; int hst, amin; double aavg; qhp::stats(&hb, &fb, &hst, &aavg, &amin);
-          if (hst != -2) printf("  [HP] final: host-built batches %llu, GPU-built after start-up %llu (of %llu); ready ahead at launch: avg %.2f, min %d\n",
-                                (unsigned long long)hb, (unsigned long long)fb, (unsigned long long)sp_batch_no, aavg, amin); }
-#endif
         g_stop_polled = 0;
 #else
 #if QSB_TABLE_L2_WINDOW
