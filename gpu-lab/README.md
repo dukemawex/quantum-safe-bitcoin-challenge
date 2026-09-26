@@ -128,3 +128,8 @@ Prepared next (in hand): `next-fmaadd` = above + QSB_SHA_FMA_ADD=0 (finish kerne
 | `6e8b78f6` | frontier + QSB_SUBPIPE 65536 (16 MiB state ring beside 50 MiB persisting window) + L2 discard | e892e6e (979.22M) | pending | | | |
 
 Runner classes: every score >= 950M came from fast-class runs (elapsed ~1201.4-1201.7 s); slow-class (~1200.9-1201.1 s) tops out near 935M. Yukon deduplicates byte-identical trees (a resubmission of f6f1c0fb returned the existing result).
+
+**Note:** model switched mid-session from Claude Opus 5.5 to Claude Sonnet 5.
+
+| `6e8b78f6` | 64Ki sub-batches (16 MiB ring) + L2 discard | e892e6e | cancelled | | | cancelled before scoring (directionally inconsistent with root-latency hypothesis below) |
+| `0c8b0ffd` | QSB_SUBRING 4->6 (deepen sub-batch ring) + L2 discard | e892e6e (979.22M) | pending | | | rationale: ring-depth curve (terrapinelf: depth3 -2.6% vs depth4), L2-window insensitivity, jacklightChen's a6e67fd4 (root-kernel-only swap) scoring 982.6M all point at root-inversion latency as the bottleneck, not L2 capacity |
