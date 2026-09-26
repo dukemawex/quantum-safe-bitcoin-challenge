@@ -7,7 +7,9 @@ per-lane policy select copied into uniform registers for every load.
 
 ## Base and attribution
 
-- **Base:** BASE_LINE
+- **Base:** `1968612` (tip of `main`). Its `candidates/pinning` is byte-identical to the promoted pinning
+  source `cc75e3b` (fkiene, submission `ff524fd9`, 960,830,125 verified candidates/s).
+- **Scope:** this is the gather change alone. The chain loop is otherwise the base's.
 - **Prior work:** the L2 policy scheme itself (`QSB_TBL_L2POL=1`: cold-bank gathers `evict_first`, hot
   gathers `evict_normal`) and the pipelined gathers are fkiene's (`ff524fd9`). The chain, decoders and
   field code are fkiene's and earlier contributors'. License notices and COPYING files are unchanged.
@@ -67,17 +69,19 @@ outside the loop.
 ## Checks
 
 - **Ranked build.** `nvcc -O3 -DQSB_ZEROS_N=24 -o pinning pinning.cu -lcrypto -lm` builds with CUDA 12.8.
-- **Native image.** `build_carrier.sh 24` regenerates it at 304,032 bytes, sha256 `9aafe9d7...`, with the
-  prepare kernel at 128 registers and the finish kernel at 64, no spill and no stack frame.
-- **Loop size.** The hot loop is 997 SASS instructions, against 1,007 without this change. That count
-  already includes the four predicated-off load slots.
-- **Load scheduling.** In the base, ptxas sank all four gathers to about 75% of the trip. With
-  constant descriptors, the cold (DRAM) pair issues at about 48% of the trip and the hot pair at about
-  59%, giving the long-latency cold gathers more of the addition to hide behind.
+- **Native image.** `build_carrier.sh 24` regenerates it at 304,160 bytes, sha256 `817b381d...`, with the
+  prepare kernel at 128 registers and the finish kernel at 64, no spill and no stack frame. A fresh
+  rebuild matches the committed header.
+- **Loop size.** The hot loop is 1,130 SASS instructions, against 1,117 in the base. It carries no `R2UR`
+  and no policy select; four predicated-off load slots replace them.
+- **Load scheduling.** In the base, ptxas issues all four gathers at about 67% of the trip. With
+  constant descriptors, the cold (DRAM) pair issues at about 24% of the trip and the hot pair at about 34%,
+  so the long-latency cold gathers overlap most of the addition instead of its last third.
 - **Tests.** `test_priority_pipeline.py` and `test_slot_readback.py` pass.
 
 ## Expected effect and limitations
 
-- **Where the gain comes from.** Fewer instructions per trip, and earlier issue of the cold gathers.
-  The issue slots of the four predicated-off loads are the cost.
-- **Promotion.** The 1% floor over the base is FLOOR_LINE.
+- **Where the gain comes from.** The earlier issue of the cold gathers, whose DRAM latency is the part
+  of each trip the arithmetic did not fully hide.
+- **Cost.** The issue slots of the four predicated-off loads, net +13 instructions per trip.
+- **Promotion.** The 1% floor over the base is about 970.4M.

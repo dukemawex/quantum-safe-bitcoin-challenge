@@ -1,18 +1,18 @@
-From bf8c41c6c32d7a2fde4a381af5fcd410cfb5974a Mon Sep 17 00:00:00 2001
+From f69b60afc1df989861df0ea53775cdd6abdea612 Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Sat, 26 Sep 2026 08:54:12 +0000
-Subject: [PATCH 2/2] pinning: predicated constant-policy gathers
- (QSB_TBL_POL_PRED) on the phi hoist
+Subject: [PATCH] pinning: predicated constant-policy gathers
+ (QSB_TBL_POL_PRED)
 
 ---
  candidates/pinning/pinning.cu | 42 +++++++++++++++++++++++++++++++++--
  1 file changed, 40 insertions(+), 2 deletions(-)
 
 diff --git a/candidates/pinning/pinning.cu b/candidates/pinning/pinning.cu
-index 1e0e5ac..1c481ac 100644
+index 20ad300..cbeec11 100644
 --- a/candidates/pinning/pinning.cu
 +++ b/candidates/pinning/pinning.cu
-@@ -1295,6 +1295,9 @@ __device__ __forceinline__ void qsb_pf_rec(const uint8_t *table,uint32_t code) {
+@@ -1292,6 +1292,9 @@ __device__ __forceinline__ void qsb_pf_rec(const uint8_t *table,uint32_t code) {
  #error "QSB_TBL_L2POL takes the hot/cold split from the QSB_FOUR_HOT bank order"
  #endif
  #define QSB_HOT_RECS 786432u   /* q9_bigtbl_offset(4): segments 0..3, 48 MiB */
@@ -22,7 +22,7 @@ index 1e0e5ac..1c481ac 100644
  #if QSB_TBL_L2POL && defined(QSB_CARRIER_BUILD) && defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 800
  #define QSB_TBL_L2POL_ON 1
  __device__ __forceinline__ uint64_t qsb_tbl_policy(uint32_t code) {
-@@ -1307,6 +1310,19 @@ __device__ __forceinline__ uint64_t qsb_tbl_policy(uint32_t code) {
+@@ -1304,6 +1307,19 @@ __device__ __forceinline__ uint64_t qsb_tbl_policy(uint32_t code) {
  #endif
      return (code&0x7fffffffu)>=QSB_HOT_RECS ? cold : hot;
  }
@@ -42,7 +42,7 @@ index 1e0e5ac..1c481ac 100644
  #else
  #define QSB_TBL_L2POL_ON 0
  #endif
-@@ -1345,7 +1361,18 @@ __device__ __forceinline__ void qsb_load_glv_y_code(const uint8_t *table,uint32_
+@@ -1342,7 +1358,18 @@ __device__ __forceinline__ void qsb_load_glv_y_code(const uint8_t *table,uint32_
      /* Native carrier: the Y half is gathered first, so it carries the 64 B L2 fetch
       * that brings the record's X sector along for qsb_load_glv_x_code. */
      ulonglong2 y0;
@@ -62,7 +62,7 @@ index 1e0e5ac..1c481ac 100644
      const uint64_t pol=qsb_tbl_policy(code);
      ulonglong2 y1;
  #if QSB_GATHER_V4
-@@ -1378,7 +1405,18 @@ __device__ __forceinline__ void qsb_load_glv_y_code(const uint8_t *table,uint32_
+@@ -1375,7 +1402,18 @@ __device__ __forceinline__ void qsb_load_glv_y_code(const uint8_t *table,uint32_
  __device__ __forceinline__ void qsb_load_glv_x_code(const uint8_t *table,uint32_t code,
                                                       uint64_t *x) {
      const ulonglong2 *tx=qsb_pipe_half(table,code,0u);
