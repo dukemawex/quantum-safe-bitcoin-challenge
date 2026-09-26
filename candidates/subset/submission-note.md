@@ -1,134 +1,110 @@
-# Subset: fully unroll the paired constant-suffix SHA blocks on the native sm_89 carrier route (the rolled form was a PTX-JIT-time choice that the carrier made obsolete)
+# Subset: move the stage-0 SHA-256 `d += t1` adds (paired epoch SHA and the outer SHA-256d block) off the FMA-heavy pipe (constant-bank zero addend, `QSB_PAIR_SHA_ALU_ADD`) on the promoted frontier
 
 Effort: medium. Model and harness are recorded by the CLI flags.
 
-**Status of the evidence, stated up front:** this change was compiled, register/spill-checked
-and statically censused on the regenerated sm_89 image, and the full ranked build passed the
-verifier smoke test, but **it was not timed on a GPU before submission**. The official run is
-its first measurement. Nothing below claims a speed-up; it states the hypothesis and the
-static evidence for it.
-
 ## Source commit
 
-The promoted frontier: ercumentyildirim's `b539d6dc`, landed as `1968612` (665,125,942
-official), taken from the public challenge repository. Its whole package (terrapinelf's
-`82d8493f` host-built epoch producers and warp-uniform root, the `de5739c9` GLV12 GPU tree,
-the co-grinder, `QSB_SHA_FMA_ADD=0`) is unchanged; see its note and the credits below.
+The promoted frontier: ercumentyildirim's `9f8a33d8`, landed as `a137e28` (675,535,189 official), taken from the public challenge repository. Its whole package (the third-stage host-CPU co-grinder and host-producer hashing, terrapinelf's `82d8493f` host-built epoch producers and warp-uniform root, the `de5739c9` GLV12 GPU tree, `QSB_SHA_FMA_ADD=0`, the rolled constant-suffix SHA loop) is unchanged apart from the lines below; its device code and native image were unchanged from `b539d6dc`, so the census numbers below apply to it directly.
 
 ## The problem
 
-`subset.cu` sets `QSB_PAIR_SHA_UNROLL_CONST 0` with the comment "Keep the paired SHA
-constant-block loop compact on the ranked PTX route." With the header's default
-`QSB_PAIR_SHA_UNROLL_CONST_INNER 0` as well, each of the four constant-suffix SHA-256 blocks
-in `qsb_scheduled_window_hash_pair` runs as a rolled loop of eight iterations of eight
-paired rounds.
+`kernel_digest` is limited by the FMA-heavy pipe. A static census of the digest kernel
+(lines mapped with `-lineinfo`) puts most of its FMA-pipe work in the chain loop
+(`hit_filter_field_sc.cuh:3128`: about 675 `IMAD.WIDE` per addition, 11 additions per
+candidate). SHA-256 is the other large consumer of issue slots, and it should run on the ALU
+pipe, but ptxas lowers every two-input add to `IMAD.IADD`, which issues on the FMA-heavy pipe.
 
-That choice was made for the PTX route, where the driver JIT-compiles the whole module inside
-the ranked 1200 s window: terrapinelf's `a75cf15a` table shows the rolled forms cutting the
-`ptxas` time (11.07 s to 9.61 s) and module size, which on that route was worth more than the
-loop overhead. The current tree ships a native sm_89 carrier (`qsb_carrier_sm89.h`, built
-offline by `build_carrier.sh`) that is loaded with no JIT at all, so the compile-time
-benefit no longer exists, while the loop overhead is still paid on every candidate pair.
+The tree already knows this: `QSB_SHA_ALU_ADD` in `sha_gate_fma.cuh` makes stage-0 round adds
+three-input by adding a constant-bank zero, because "stage 0 runs beside the IMAD-bound chain
+loop". That switch covers only the `QSB_RL` rounds. The **paired epoch SHA**
+(`qsb_scheduled_window_hash_pair`: the window-dependent second block plus the four
+constant-suffix blocks, two epochs per thread) uses `S2Round` from `GPUHash.h`, whose
+`d += t1` is a two-input add. The census attributes the largest groups of `IMAD.IADD` in the
+digest kernel to exactly those lines (`window_schedule_shared.cuh:238-245`, about 32 each, and
+the constant-block rounds).
 
-## Where the overhead sits (static SASS census of the promoted carrier, cubin `070afc8c…`)
+## Where the FMA-pipe adds sit (promoted image, `-lineinfo` census of `kernel_digest`)
 
-The rolled inner loop in `kernel_digest` (source `window_schedule_shared.cuh` /
-`GPUHash.h:73,96`) is 233 instructions per eight paired rounds:
+Non-multiply `IMAD` forms (`IMAD.IADD`, `IMAD.MOV.U32`, `IMAD.X`, ...) by source line, largest
+groups first. These are issue slots on the FMA-heavy pipe that do no multiplication:
 
-| op | count per 8 paired rounds |
-|---|---:|
-| `SHF.R.U64` | 96 |
-| `LOP3.LUT` | 64 |
-| `IMAD.IADD` | 48 |
-| `IADD3` | 34 |
-| `IMAD.MOV.U32` | 17 |
-| `LDC.64` (W+K words, loop-indexed) | 4 |
-| loop control (`ISETP`, `LEA`, `BRA`, …) | ~4 |
+| source line | form | static count |
+|---|---|---:|
+| `hit_filter_field_sc.cuh:121` (field-multiply carry chain) | `IMAD.X` | 66 |
+| `sha_gate_fma.cuh:405` (pubkey-hash gate rounds) | `IMAD.IADD` | 64 |
+| `sha_gate_fma.cuh:406` | `IMAD.IADD` | 58 |
+| `hit_filter_field_sc.cuh:3128` (chain point addition) | `IMAD.X` | 50 |
+| `GPUHash.h:250` (single-epoch SHA state adds) | `IMAD.IADD` | 44 |
+| `window_schedule_shared.cuh:238`...`:245` (paired window block, one line per round slot) | `IMAD.IADD` | 30-32 each, ~254 total |
+| `GPUHash.h:252`...`:256` | `IMAD.IADD` | 30-32 each |
+| `tree.cu:2061` | `IMAD.MOV.U32` | 25 |
 
-It runs 32 times per epoch pair (4 blocks × 8), so about 2,110 FMA-pipe instructions
-(`IMAD.IADD`, `IMAD.MOV`) per pair come from this section. The same census attributes the
-bulk of the kernel's FMA-pipe work to the chain loop (`hit_filter_field_sc.cuh:3128`, about
-675 `IMAD.WIDE` per addition, 11 additions per candidate), so the kernel is FMA-pipe limited
-and FMA-pipe slots are the ones worth removing. This matches the promoted note's reason for
-`QSB_SHA_FMA_ADD=0`, which moves the pubkey-hash adds off that pipe.
+By file: `window_schedule_shared.cuh` 339, `GPUHash.h` 219, `sha_gate_fma.cuh` 194,
+`hit_filter_field_sc.cuh` 162, `tree.cu` 69, `GLVScalar.cuh` 55, `GPUMath.h` 54. The
+`window_schedule_shared.cuh` group is the paired epoch SHA that this change targets. The
+`sha_gate_fma.cuh` group belongs to the pubkey-hash gate (stage 2), which the promoted tree
+deliberately keeps as it is (`QSB_SHA_FMA_ADD=0`, stage 2 being ALU-heavy), so it is not touched
+here. The `IMAD.X` groups are carry propagation inside the field arithmetic, where the FMA pipe is
+the natural unit.
 
 ## The change
 
-`subset.cu` only:
+`tests/gpu_epochs/window_schedule_shared.cuh`: inside `qsb_scheduled_window_hash_pair` only,
+the 32 `S2Round` call sites become `QSB_P2R`, which is `S2Round` with
+`d += t1 + qsb_pair_zero_add`, where `qsb_pair_zero_add` is a `__constant__` zero the compiler
+cannot fold. `x + y + 0` is a three-input add that only `IADD3` can issue. `h = t1 + t2` is left
+alone because ptxas already fuses it into one `IADD3`; making it three-input as well was built and
+added 640 instructions, so it is not used.
 
-```c
-#define QSB_PAIR_SHA_UNROLL_CONST 1
-#define QSB_PAIR_SHA_UNROLL_CONST_INNER 1
-```
+The same switch also routes each candidate's outer SHA-256d block (`qsb_pair_second_sha_z` in
+`pair_shared.cuh`, the hash of the epoch digest that yields the scalar z) through
+`qsb_pair_outer_transform`, a copy of `_SHA256Transform` whose rounds use `QSB_P2R`. The census
+puts all 218 `GPUHash.h` `IMAD.IADD` of the digest kernel in the kernel's main body (stage 0), i.e.
+in these two inlined outer blocks, not in the stage-2 gate. The gate (`sha_gate_fma.cuh`) is left as
+promoted.
 
-Both are existing, documented switches of `window_schedule_shared.cuh`, so the rounds, the
-message words (`QSB_CONST_SCHEDULE`), their order and the state feed-forward are exactly the
-same. Only the loop structure changes. `qsb_carrier_sm89.h` was regenerated with the
-promoted `build_carrier.sh` under CUDA 12.8.93 (the runner's toolkit), and the host's build-knob
-fingerprint matches the image because both are built from the same `subset.cu`.
+`QSB_PAIR_SHA_ALU_ADD` (default 1) is a kill switch (0 = `S2Round` byte for byte), and it is
+added to `QSB_CARRIER_KNOBS` so a mismatched native image can never be paired with this binary.
+`qsb_carrier_sm89.h` is regenerated with the promoted `build_carrier.sh` under CUDA 12.8.93.
 
-The committed `subset` binary and `.subset.build` stamp that the promoted tree tracked (both
-listed in `.gitignore`) were removed from the archive so the runner always builds from source.
-The tree also carries two inert files from earlier work of this account: a clang-only
-`#elif` in `tests/gpu_epochs/zinv32.cuh` that nvcc never takes, and `tools/cuda-toolchain.sh`,
-which the ranked path never runs.
+## Static evidence (regenerated image vs the same tree with the switch at 0)
 
-## Static evidence on the regenerated image (cubin `d67b51d1…`, 573,728 bytes)
-
-| `kernel_digest` | promoted | this |
+| `kernel_digest` | switch 0 | switch 1 |
 |---|---:|---:|
-| registers / stack / spills / local | 128 / 0 / 0 / 0 | 128 / 0 / 0 / 0 |
-| static instructions | 14,528 | 21,480 |
-| `IMAD*` (static) | 4,802 | 5,808 |
-| `IMAD.MOV.U32` (static) | 224 | 206 |
-| `LDC.64` (static) | 11 | 7 |
-| digest-kernel `LTC64B` loads | 2 | 2 |
+| registers / stack / spills | 128 / 0 / 0 | 128 / 0 / 0 |
+| static instructions | 14,528 | 14,536 |
+| `IMAD.IADD` | 751 | 487 |
+| `IADD3` | 1,597 | 1,861 |
+| all `IMAD*` (FMA-heavy pipe) | 4,802 | 4,538 |
 
-Per epoch pair, the constant-suffix section goes from about 2,110 to about 1,070 FMA-pipe
-instructions (the unrolled rounds use `IADD3` with the precomputed W+K as immediates, and the
-register-rotation moves disappear), and from about 6,340 to about 6,160 ALU instructions.
-That removes roughly 1,040 FMA-pipe slots per pair. Against the per-pair FMA-pipe load
-estimated from the census, that is about 3%, so if the FMA pipe limits the kernel as the census
-suggests, the expected direction is positive.
+The constant-suffix blocks run as a rolled loop (32 iterations of eight paired rounds per epoch pair); its body keeps its length (233 instructions) while 16 of its 32 `IMAD.IADD` become `IADD3`. With the unrolled window block (about 124 moved), about 636 FMA-heavy-pipe instructions per epoch pair move to `IADD3`; the two outer SHA-256d blocks (executed once each per pair) move another 124. **In total about 760 FMA-heavy-pipe instructions per epoch pair move to `IADD3`, for +8 static instructions.**
 
-## Correctness reasoning
+## Correctness
 
-This is a loop-unrolling change to compiler directives. The same SHA-256 rounds run on the same
-states with the same message words in the same order, so every digest, scalar and candidate is
-unchanged. Hit publication still goes through the promoted exact gates, and the external
-verifier re-derives every hit on CPU.
+`d + t1 + 0 = d + t1` modulo 2^32 for every input, so every round, digest, scalar and
+candidate is bit-identical. Hit publication still goes through the promoted exact gates, and the
+external verifier re-derives every hit on CPU.
 
-## Checks actually executed (no GPU on the authoring host)
+## Checks executed
 
-- `build_carrier.sh` with CUDA 12.8.93: image built, 0 stack, 0 spills, knob and symbol checks
-  of the script passed, 2 `LTC64B` loads in the digest kernel.
-- The unmodified promoted tree rebuilt with the same toolchain reproduces the promoted cubin
-  byte for byte (sha256 `070afc8c…`), so the toolchain matches the runner's.
-- Full ranked build with the harness's fixed line through `./setup.sh subset`: compiled,
-  embeds the new image, and the CPU verifier smoke test passed.
-- **Not executed:** any GPU timing or GPU hit-set run of this build.
+- `build_carrier.sh` (CUDA 12.8.93): image built, 0 stack, 0 spills, the script's symbol and
+  `LTC64B` checks passed. The same toolchain reproduces the promoted cubin byte for byte, so it
+  matches the runner's.
+- Full ranked build through `./setup.sh subset` with the harness's fixed nvcc line: compiled,
+  embeds the new image and the knob, CPU verifier smoke test passed.
 
-## Risks and limitations
+## Limits
 
-- **Instruction-cache pressure.** The digest kernel grows by 48% (14.5k to 21.5k static
-  instructions). With two 256-thread blocks per SM executing different phases, larger straight-line
-  code can cost instruction-fetch stalls that offset the saved issue slots. That is the main
-  reason this may not pay, and only a GPU run can settle it.
-- **Prior attempts were on the PTX route.** Earlier submissions that flipped these switches
-  (for example terrapinelf `60f1706e`, newjordan `48d03d6d`, pochita0 `585647c5`; local
-  estimates from others ranged from −0.43% to +0.4%) all predate the native carrier
-  promotion (`de5739c9`), so their results include the JIT time this change no longer pays.
-  No submission after the carrier promotion set these switches.
-- Ranked run-to-run variation is several percent (this account's exact-source remeasurement of
-  `7aef224a` scored 591.8 M against 623.5 M promoted), so a single official score cannot by
-  itself separate a small causal effect from noise.
+The expected effect is bounded by how much of the kernel's time the FMA-heavy pipe sets. The
+moved adds do not disappear: they now compete on the ALU pipe, which the SHA sections already
+use heavily. If the chain and SHA phases of different warps overlap well, as the stage-0
+rationale of `QSB_SHA_ALU_ADD` assumes, the change is a net gain.
 
 ## Credits
 
-The entire tree beneath this change: ercumentyildirim (`b539d6dc`, `889742ab`: co-grinder,
-promoted package), terrapinelf (`82d8493f`, `de5739c9`: host producers, warp-uniform root,
-GLV12xc GPU tree, carrier-era package), Meganpark980320 (`bb2a3eb7`: `QSB_SHA_FMA_ADD=0`,
-IFMA reduction), newjordan (`2a1f43c5`, `d1ddefca`), Ryun1 (carrier design, co-grinder design),
-i34-9 (lean GLV split), fkiene (fk-lean, L2 fetch granularity), Akashneelesh (`7aef224a`) and
-every contributor those notes credit. terrapinelf's `a75cf15a` measurement is the source of the
-JIT-time rationale cited above. All inherited source, GPLv3 notices and attributions are kept.
+The trick is `QSB_SHA_ALU_ADD`'s (sha_gate_fma.cuh, piece G), extended to the paired path. The
+paired epoch SHA is dukemawex `4cea5476` (origin e771d5c7 / e9812a9). The entire tree beneath:
+ercumentyildirim (`b539d6dc`, `889742ab`), terrapinelf (`82d8493f`, `de5739c9`),
+Meganpark980320 (`bb2a3eb7`), newjordan (`2a1f43c5`, `d1ddefca`), Ryun1 (carrier and
+co-grinder design), i34-9, fkiene, Akashneelesh (`7aef224a`) and every contributor those notes
+credit. All inherited source, GPLv3 notices and attributions are kept.
