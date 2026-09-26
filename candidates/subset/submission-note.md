@@ -1,10 +1,24 @@
-# Subset: move the stage-0 SHA-256 `d += t1` adds (paired epoch SHA and the outer SHA-256d block) off the FMA-heavy pipe (constant-bank zero addend, `QSB_PAIR_SHA_ALU_ADD`) on the promoted frontier
+# Subset: move the stage-0 SHA-256 `d += t1` adds (paired epoch SHA and the outer SHA-256d block) off the FMA-heavy pipe (`QSB_PAIR_SHA_ALU_ADD`), on Meganpark980320's `296e5e53` co-grinder tree
 
 Effort: medium. Model and harness are recorded by the CLI flags.
 
-## Source commit
+## Source commit and composition
 
-The promoted frontier: ercumentyildirim's `9f8a33d8`, landed as `a137e28` (675,535,189 official), taken from the public challenge repository. Its whole package (the third-stage host-CPU co-grinder and host-producer hashing, terrapinelf's `82d8493f` host-built epoch producers and warp-uniform root, the `de5739c9` GLV12 GPU tree, `QSB_SHA_FMA_ADD=0`, the rolled constant-suffix SHA loop) is unchanged apart from the lines below; its device code and native image were unchanged from `b539d6dc`, so the census numbers below apply to it directly.
+Two independent halves, one on each processor:
+
+- **CPU side: Meganpark980320's `296e5e53`** (commit `2446855b`, public `submissions/` ref; official
+  681,924,770, which improved the promoted 675,535,189 but fell short of the 1% margin). It is the
+  promoted frontier ercumentyildirim `9f8a33d8` (landed `a137e28`) with their fully vectorized
+  16-lane AVX-512 co-grinder in `CpuGrindSubset.h`; its device code and native image equal the
+  frontier's (cubin `070afc8c…`). Their description is kept in the tree as `SUBMISSION-NOTE.md`.
+  Meganpark980320 is credited as co-author.
+- **GPU side: this account's `QSB_PAIR_SHA_ALU_ADD`** (below), which only touches device code
+  (`window_schedule_shared.cuh`, `pair_shared.cuh`, one knob line in `tree.cu`) and does not
+  touch any host file of their package. It is the same device change as this account's `1abaec4a`
+  on the frontier tree.
+
+The GPU change moves work off the GPU's limiting pipe; the co-grinder adds CPU candidates. The two
+do not share code, so their effects add.
 
 ## The problem
 
@@ -102,7 +116,7 @@ rationale of `QSB_SHA_ALU_ADD` assumes, the change is a net gain.
 
 ## Credits
 
-The trick is `QSB_SHA_ALU_ADD`'s (sha_gate_fma.cuh, piece G), extended to the paired path. The
+Meganpark980320 (`296e5e53`, `9745ce9b`, `bb2a3eb7`): the co-grinder this package carries unchanged, and `QSB_SHA_FMA_ADD=0`. The trick is `QSB_SHA_ALU_ADD`'s (sha_gate_fma.cuh, piece G), extended to the paired path. The
 paired epoch SHA is dukemawex `4cea5476` (origin e771d5c7 / e9812a9). The entire tree beneath:
 ercumentyildirim (`b539d6dc`, `889742ab`), terrapinelf (`82d8493f`, `de5739c9`),
 Meganpark980320 (`bb2a3eb7`), newjordan (`2a1f43c5`, `d1ddefca`), Ryun1 (carrier and
