@@ -1,0 +1,52 @@
+From 2c27981044247e79d183578c19eaafc39a99a1ba Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 26 Sep 2026 12:53:20 +0000
+Subject: [PATCH] pinning: step the VRAM fallback batch down by 1M instead of
+ halving
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017u8DVxBCPSdjrvryjLW5H5
+---
+ candidates/pinning/pinning.cu | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/candidates/pinning/pinning.cu b/candidates/pinning/pinning.cu
+index 602cd66..0ae5cb6 100644
+--- a/candidates/pinning/pinning.cu
++++ b/candidates/pinning/pinning.cu
+@@ -5099,10 +5099,11 @@ int main(int argc, char **argv) {
+     size_t pipeline_tree_bytes=0;
+     size_t super_root_bytes=(size_t)ROOT_GRDSZ*4u*sizeof(uint64_t);
+     size_t root_checkpoint_bytes=(size_t)ROOT_GRDSZ*4u*QSB_CHECKPOINT_STRIDE*sizeof(uint64_t);
+-    /* Allocate-or-halve: a 24 GB card whose free VRAM is below the GLV table plus
+-     * QSB_SLOTS full-size state sets fails here. Release the partial set, halve BATCH
+-     * (it stays a multiple of 256 >= 1M) and retry. BATCH reaches the kernels only as a
+-     * launch parameter, so candidates, points and hits are unchanged. */
++    /* Allocate-or-shrink: a 24 GB card whose free VRAM is below the GLV table plus
++     * QSB_SLOTS full-size state sets fails here. Release the partial set, lower BATCH by
++     * 1M (4M -> 3M -> 2M -> 1M; each step frees QSB_SLOTS*64 MiB and keeps BATCH a multiple
++     * of 256, so every batch_lt stays 256-aligned) and retry. BATCH reaches the kernels
++     * only as a launch parameter, so candidates, points and hits are unchanged. */
+     for (int s = 0; s < QSB_SLOTS; s++) {
+         d_pipeline_state[s]=NULL; d_pipeline_roots[s]=NULL; d_pipeline_tree[s]=NULL;
+         d_super_roots[s]=NULL; d_root_checkpoint[s]=NULL;
+@@ -5121,14 +5122,14 @@ int main(int argc, char **argv) {
+                 d_super_roots[t]=NULL; d_root_checkpoint[t]=NULL;
+             }
+             cudaGetLastError();
+-            BATCH>>=1;
++            BATCH-=(1<<20);
+             GRDSZ=(BATCH+QSB_TREE_N-1)/QSB_TREE_N;
+             ROOT_GRDSZ=(GRDSZ+255)/256;
+             pipeline_state_bytes=(size_t)BATCH*QSB_STATE_PLANES*sizeof(ulonglong2);
+             pipeline_root_bytes=(size_t)GRDSZ*8u*sizeof(uint64_t);
+             super_root_bytes=(size_t)ROOT_GRDSZ*4u*sizeof(uint64_t);
+             root_checkpoint_bytes=(size_t)ROOT_GRDSZ*4u*QSB_CHECKPOINT_STRIDE*sizeof(uint64_t);
+-            printf("  Pipeline allocation short of VRAM (%s); batch halved to %d\n",
++            printf("  Pipeline allocation short of VRAM (%s); batch lowered to %d\n",
+                    cudaGetErrorString(pipeline_err),BATCH);
+             s=-1;
+             continue;
+-- 
+2.43.0
+

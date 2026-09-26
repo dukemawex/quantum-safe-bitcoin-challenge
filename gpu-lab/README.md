@@ -114,4 +114,5 @@ my job still failed within a minute, which points to a third runner that fails e
 
 **Root cause of the fast Benchmark failures (from the diagnostics artifact of run 36235560942):** the kernel binary returned after 2.5 s with 0 candidates (bridge `wall_s` 2.63; `gpu_wrap.py` does not propagate the binary's exit status, so the bridge shows exit 0). The runner was an RTX 4090 on driver 580.178.04. The carrier's kernel resources match the frontier's exactly, so this is the frontier's memory demand (21.1 GiB GLV table plus 4 slots x 4M-candidate state) not fitting that runner's free VRAM. terrapinelf's `8f2ea1b3` ran the same device code (carrier `9aafe9d7`) with an adaptive batch and scored 967,108,331.
 
-| `231c1d40` | phi hoist + polpred + allocate-or-halve slot allocation (host only, carrier byte-identical) | a137e28 (960.83M) | pending | | | |
+| `231c1d40` | phi hoist + polpred + allocate-or-halve slot allocation (host only, carrier byte-identical) | a137e28 (960.83M) | 933,930,308 | 1201.52 | 133,769 | rejected (-2.8%); terrapinelf's same device code got 967.1M |
+| `1a69f325` | same, fallback steps BATCH down by 1M instead of halving | a137e28 (960.83M) | pending | | | |
