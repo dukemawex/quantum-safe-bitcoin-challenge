@@ -116,3 +116,9 @@ my job still failed within a minute, which points to a third runner that fails e
 
 | `231c1d40` | phi hoist + polpred + allocate-or-halve slot allocation (host only, carrier byte-identical) | a137e28 (960.83M) | 933,930,308 | 1201.52 | 133,769 | rejected (-2.8%); terrapinelf's same device code got 967.1M |
 | `1a69f325` | same, fallback steps BATCH down by 1M instead of halving | a137e28 (960.83M) | pending | | | |
+
+**Frontier moved to 979,222,732** (terrapinelf `0c9471ef`, main `e892e6e`; includes my phi hoist + predicated gathers and ercumentyildirim's green-context sub-batch pipeline). `1a69f325` (old base) cancelled.
+
+| `f6f1c0fb` | e892e6e + QSB_SHA_FMA_ROT=0 + L2STATE bit 2 (finish discard) + GREEN_SHARED 12 | e892e6e (979.22M) | pending | | | |
+
+Prepared next (in hand): `next-fmaadd` = above + QSB_SHA_FMA_ADD=0 (finish kernel 4,040 -> 3,600 SASS, IMAD mul-by-one 1,148 -> 30).
