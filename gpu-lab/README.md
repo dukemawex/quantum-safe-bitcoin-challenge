@@ -103,3 +103,11 @@ Fast-failure window 09:15-09:30 UTC: i34-9 `a81de57c`/`5e328f13` and my `07f9413
 
 09:40 UTC: terrapinelf `f6d7bbb9` scored 959.0M (a full run), so the runner pool is working again.
 | `cff08464` | re-run of `aabc3509` (QSB_PHI_HOIST + QSB_TBL_POL_PRED) | 1968612/a137e28 (960.83M; pinning tree unchanged) | pending | | | |
+| `cff08464` | re-run of `aabc3509` | a137e28 | none | n/a | n/a | FAILED at Benchmark ~1 min after submit, while i34-9 scored on another runner |
+
+**Debug (10:05-10:20 UTC, L40S sm_89, `dbg.sh`):** the policy-only tree (`f69b60a`, same as the failed `9a2d6b57`)
+passes the repository's own `setup.sh pinning` + `benchmark.sh pinning` flow: 4,525/4,525 hits verified, RESULT PASS,
+648.9M/s self-reported on the L40S. So the fast Benchmark failures are not a crash in the build. At 09:46 the two
+known-good runners were busy (i34-9 scoring continuously; terrapinelf `8f2ea1b3` stuck validating since 09:42), and
+my job still failed within a minute, which points to a third runner that fails every job it picks up.
+| `9b5b1359` | re-run: QSB_PHI_HOIST + QSB_TBL_POL_PRED | a137e28 (pinning = cc75e3b, 960.83M) | pending | | | |
