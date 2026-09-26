@@ -8,3 +8,10 @@ Both include the regenerated qsb_carrier_sm89.h and the submission note.
 - n5-vs-a137e28.diff: waiting candidate after 1abaec4a: N3b + full const SHA unroll (~1,780 fewer FMA-pipe instrs/pair).
 - n6-vs-a137e28.diff: NEXT SUBMISSION. Meganpark980320 296e5e53 co-grinder tree (681.9M) + QSB_PAIR_SHA_ALU_ADD GPU change; --coauthors Meganpark980320.
 - n7-vs-a137e28.diff: waiting after 6975ad8c: Meganpark co-grinder tree + const SHA unroll + ALU adds (--coauthors Meganpark980320).
+
+## N8 (waiting, 2026-09-26 19:1x UTC) — branch `prep-n8` (3c37f01)
+New record kshitij-hash `d052bc3d` (61cb94f, 691,630,437). N7's GPU change (paired SHA
+`QSB_PAIR_SHA_ALU_ADD` + const-suffix unroll) ported onto it; record CPU side kept. Carrier
+`df82b24f…` (574,368 B), 0 spills; record image reproduces byte for byte locally; setup.sh smoke
+test passed. Patch (excluding carrier): `n8-vs-61cb94f.diff`. Submit with
+`--coauthors kshitij-hash,Meganpark980320`.
