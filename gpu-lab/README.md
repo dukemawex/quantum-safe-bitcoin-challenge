@@ -122,3 +122,9 @@ my job still failed within a minute, which points to a third runner that fails e
 | `f6f1c0fb` | e892e6e + QSB_SHA_FMA_ROT=0 + L2STATE bit 2 (finish discard) + GREEN_SHARED 12 | e892e6e (979.22M) | pending | | | |
 
 Prepared next (in hand): `next-fmaadd` = above + QSB_SHA_FMA_ADD=0 (finish kernel 4,040 -> 3,600 SASS, IMAD mul-by-one 1,148 -> 30).
+
+| `f6f1c0fb` | result | e892e6e | 974,116,490 | 1201.55 (fast) | 139,529 | rejected (-0.52%); closest to the frontier since it moved |
+| `3621d601` | f6f1c0fb + QSB_SHA_FMA_ADD=0 | e892e6e | 909,724,691 | 1200.98 (slow) | 130,243 | rejected; about -1.7% vs same-class runs: finish is pipe-balanced, ALU-heavier finish loses |
+| `6e8b78f6` | frontier + QSB_SUBPIPE 65536 (16 MiB state ring beside 50 MiB persisting window) + L2 discard | e892e6e (979.22M) | pending | | | |
+
+Runner classes: every score >= 950M came from fast-class runs (elapsed ~1201.4-1201.7 s); slow-class (~1200.9-1201.1 s) tops out near 935M. Yukon deduplicates byte-identical trees (a resubmission of f6f1c0fb returned the existing result).
