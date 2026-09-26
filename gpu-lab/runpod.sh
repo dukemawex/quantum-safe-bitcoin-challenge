@@ -30,7 +30,7 @@ up)
 import json, os, sys
 tok, b64, start = sys.argv[1:4]
 print(json.dumps({
-  "name": "qsb-pinning-ab", "imageName": os.environ.get("IMAGE", "nvidia/cuda:12.8.1-devel-ubuntu24.04"),
+  "name": os.environ.get("POD_NAME", "qsb-pinning-ab"), "imageName": os.environ.get("IMAGE", "nvidia/cuda:12.8.1-devel-ubuntu24.04"),
   "gpuTypeIds": [os.environ.get("GPU_TYPE", "NVIDIA GeForce RTX 4090")], "gpuCount": 1,
   "cloudType": os.environ.get("CLOUD", "SECURE"), "containerDiskInGb": 30, "volumeInGb": 0,
   "ports": ["8000/http"], "allowedCudaVersions": ["12.8", "12.9", "13.0"], "env": {"AGENT_TOKEN": tok, "AGENT_B64": b64},
