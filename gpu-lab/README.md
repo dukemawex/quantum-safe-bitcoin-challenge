@@ -88,3 +88,11 @@ point addition (~9% of arithmetic) cannot pay back its ~1.45%.
 DRAM cost is nonlinear: 4 random 64 B reads/candidate (~230 GB/s) cost <=5.8%, but GLV10's 10 reads scored
 -55% officially (random-read bandwidth knee), so the fewer-adds/bigger-table direction stays closed.
 The pubkey SHA is already IV-folded, padding-folded, h0-only and FMA-pipe offloaded.
+
+## Official results log (pinning)
+
+| Submission | Change | Base | Official | Runner | Verified | Outcome |
+|---|---|---|---|---|---|---|
+| `4dd2b342` | QSB_SLOTS 3 | df1df15 (934.45M) | 891.80M | slow | yes | rejected |
+| `2f2d285a` | QSB_CHAIN_ROLES under QSB_PMIX12 (2-add loop, 33 KB body) | 1968612 (960.83M) | 946.20M | fast | yes (135,538 hits) | rejected, about -1.5%: larger hot-loop body is slower despite fewer instructions |
+| `07f9413e` | QSB_PHI_HOIST (phi out of hot loop, 17.9 KB to 15.7 KB) | 1968612 (960.83M) | pending | | | |
