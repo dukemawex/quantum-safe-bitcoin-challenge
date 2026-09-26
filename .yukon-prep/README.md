@@ -3,3 +3,4 @@ Prepared Yukon subset submissions (outside the editable path; never archived).
 - n1-vs-b159670.diff: `git apply` on b159670 gives the promoted frontier's rolled SHA + QSB_PAIR_SHA_ALU_ADD. Use if 600e95a7 is rejected.
 Both include the regenerated qsb_carrier_sm89.h and the submission note.
 - n3-pair_shared-outer-alu.diff: on top of n1 or n2, extends QSB_PAIR_SHA_ALU_ADD to the outer SHA-256d block (+124 FMA->ALU adds/pair); regenerate the carrier after applying.
+- n1b-vs-a137e28.diff: QSB_PAIR_SHA_ALU_ADD on frontier 9f8a33d8/a137e28 (675.5M); git apply on upstream a137e28 (carrier + note included).
