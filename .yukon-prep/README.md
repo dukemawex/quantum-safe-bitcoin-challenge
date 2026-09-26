@@ -6,3 +6,4 @@ Both include the regenerated qsb_carrier_sm89.h and the submission note.
 - n1b-vs-a137e28.diff: QSB_PAIR_SHA_ALU_ADD on frontier 9f8a33d8/a137e28 (675.5M); git apply on upstream a137e28 (carrier + note included).
 - n3b-vs-a137e28.diff: N1b + outer SHA-256d ALU adds on a137e28 (second candidate).
 - n5-vs-a137e28.diff: waiting candidate after 1abaec4a: N3b + full const SHA unroll (~1,780 fewer FMA-pipe instrs/pair).
+- n6-vs-a137e28.diff: NEXT SUBMISSION. Meganpark980320 296e5e53 co-grinder tree (681.9M) + QSB_PAIR_SHA_ALU_ADD GPU change; --coauthors Meganpark980320.
