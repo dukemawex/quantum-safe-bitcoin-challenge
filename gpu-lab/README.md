@@ -97,4 +97,6 @@ The pubkey SHA is already IV-folded, padding-folded, h0-only and FMA-pipe offloa
 | `2f2d285a` | QSB_CHAIN_ROLES under QSB_PMIX12 (2-add loop, 33 KB body) | 1968612 (960.83M) | 946.20M | fast | yes (135,538 hits) | rejected, about -1.5%: larger hot-loop body is slower despite fewer instructions |
 | `07f9413e` | QSB_PHI_HOIST (phi out of hot loop, 17.9 KB to 15.7 KB) | 1968612 (960.83M) | none | n/a | n/a | FAILED at workflow step Benchmark (logs not reachable; other solvers failed at the same step at the same time; loop control flow proven identical by host simulation) |
 | `aabc3509` | QSB_PHI_HOIST + QSB_TBL_POL_PRED (predicated constant-policy gathers, hot loop 997) | 1968612 (960.83M) | none | n/a | n/a | FAILED at Benchmark about 2 min after submit (fast failure; the phi hoist or the runner is suspect) |
-| `9a2d6b57` | QSB_TBL_POL_PRED alone (isolation) | 1968612 (960.83M) | pending | | | |
+| `9a2d6b57` | QSB_TBL_POL_PRED alone (isolation) | 1968612 (960.83M) | none | n/a | n/a | FAILED at Benchmark 1m40s after submit |
+
+Fast-failure window 09:15-09:30 UTC: i34-9 `a81de57c`/`5e328f13` and my `07f9413e`/`aabc3509`/`9a2d6b57` all failed at Benchmark within ~2 min, while full ~20-min runs scored in between (IvanLudvig `fe9e1fa7` at 09:18). That fits one runner failing every job it picks up. The three failed builds differ (phi hoist; phi hoist + policy; policy only), and all use the same carrier rebuild process as the successful `2f2d285a`. Holding resubmission until another solver scores again.
