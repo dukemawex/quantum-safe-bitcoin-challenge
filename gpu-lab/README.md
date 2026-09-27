@@ -151,3 +151,13 @@ Runner classes: every score >= 950M came from fast-class runs (elapsed ~1201.4-1
 **Corrected approach:** since L2-discard-on-state (memory-address orthogonality) failed to transfer to the register-tree base, tried a mechanism that's orthogonal by *code path* instead: PMIX12 operates entirely within prepare's P-decode, before any candidate reaches root inversion.
 
 | `f0de3f0e` | jacklightChen's register-tree roots (a6e67fd4) + terrapinelf's EXACT PMIX12=32/block/N=1 recipe (94744cc7) -- the two largest independent near-frontier gains, combined for the first time | 73b24233 (982.6M) | pending | | | coauthors: jacklightChen, terrapinelf. Optimistic estimate ~991.7M if independent (multiplicative); could also regress like 46071542 did |
+
+## FRONTIER PROMOTED: 979,222,732 -> 995,329,477 (+1.64%)
+
+While `f0de3f0e` was queued, cefika's `54ca2f74`/`f0e453d` was promoted (coauthors DPZZxlz, terrapinelf, ercumentyildirim, hybridnoise; jacklightChen NOT included). Confirms: (1) terrapinelf's exact PMIX12=32/block/N=1 recipe IS a real, large win -- it's in the winning tree, validating my earlier hypothesis. (2) A related-but-distinct L2STATE mechanism (bits 1|8|1024, DPZZxlz PR #1891: evict_last store policy + a differently-timed discard) -- NOT the same bit-2 discard that regressed on the register-tree base. (3) QSB_GT_BATCH=12 (hybridnoise): startup-only batched gtable build, doesn't affect steady-state score. (4) NEW: native-carrier dispatch for the root-inversion kernel itself (QK_RF) -- a lever nobody had exploited before this.
+
+| `f0de3f0e` | result | 73b24233 (982.6M) | 918,445,502 | 1200.98 (slow) | 131,492 | rejected; slow-class, inconclusive (obsolete base regardless -- new bar is ~1,005.3M) |
+
+**Re-integrated register-tree roots onto the NEW frontier** (rewrote the 3-way selector to also preserve f0e453d's new QK_RF carrier dispatch, which didn't exist when jacklightChen wrote their original integration).
+
+| `02a847b9` | jacklightChen's register-tree roots layered onto f0e453d (995.3M), preserving its new QK_RF carrier dispatch as fallback | f0e453d (995.33M) | pending | | | coauthor: jacklightChen. Needs ~1,005.3M to promote. Tests whether register-tree roots compose with the actual strongest known base, after regressing (-3.4%) against an older/weaker combination |
