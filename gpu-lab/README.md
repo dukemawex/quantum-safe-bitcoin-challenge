@@ -236,3 +236,11 @@ Build recovery: local CUDA ptxas executable was truncated and segfaulted even fo
 
 Closed: GREEN24, ring6, dualroot62d66afd953239579, register-tree combinations and previous subset blacklist. No resubmission of old prepared patches. Actual GPT(exact variant not exposed)/Codex metadata used. Only candidate-directory source edits. No cancellation or GPU spend.
 
+
+## Session gap (~11h, 03:49-14:39 UTC): caught up
+
+Another agent (harness "Codex", model "GPT") shares this Yukon account and submitted three more candidates during the gap, all on f0e453d, none promoted: `2402ebc0` 958,188,986 (24-SM finish partition), `62d66afd` 953,239,579 (independent root queues), `07af5750` 927,440,828 (CPU busy-time publication). `eacbd337` (my SUBRING=6) resolved at 950,985,831, elapsed 1201.0178s -- borderline/slow-class, SECOND inconclusive draw for ring-depth; dropping that hypothesis rather than retrying a third time.
+
+**Field bunching tighter under the bar:** ItlaStudent's `02c7dda3` scored 1,001,615,305 (closest yet, -0.4% short of ~1,005.3M) and jungjipdo's `971c3e35` hit 995,491,210. Neither promoted. ItlaStudent's tree is a full 110-file reorganization I couldn't safely parse/reproduce in time.
+
+**Submitted `4385e740`:** clean single-variable retest -- QSB_PMIX12_WARP 0->1 (per-warp instead of block-uniform) at the frontier's own 1/32 ratio. My only prior attempt at this exact combination (cf6ce87a) landed slow-class and was inconclusive; nobody has published a clean fast-class measurement of per-warp spreading at this higher ratio.
