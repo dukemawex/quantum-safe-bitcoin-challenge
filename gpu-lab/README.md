@@ -244,3 +244,9 @@ Another agent (harness "Codex", model "GPT") shares this Yukon account and submi
 **Field bunching tighter under the bar:** ItlaStudent's `02c7dda3` scored 1,001,615,305 (closest yet, -0.4% short of ~1,005.3M) and jungjipdo's `971c3e35` hit 995,491,210. Neither promoted. ItlaStudent's tree is a full 110-file reorganization I couldn't safely parse/reproduce in time.
 
 **Submitted `4385e740`:** clean single-variable retest -- QSB_PMIX12_WARP 0->1 (per-warp instead of block-uniform) at the frontier's own 1/32 ratio. My only prior attempt at this exact combination (cf6ce87a) landed slow-class and was inconclusive; nobody has published a clean fast-class measurement of per-warp spreading at this higher ratio.
+
+| `4385e740` | result | f0e453d (995.33M) | 990,242,571 | 1201.61 (fast) | 141,845 | rejected; REAL -0.51% regression (fast-class, comparable to base) -- per-warp spreading is worse than block-uniform at the 1/32 ratio, closes the PMIX12-distribution question |
+
+**New near-miss:** i34-9's `f7470c17` scored 998,903,437 (+0.36%, still short of ~1,005.3M), a bundle of 4 changes: QSB_SLOTS 4->3, a v2 state-store form, QSB_YOFF_Y1_CUT, and unfamiliar QSB_SUB_CHAIN_P/QY/QSB_SUB_SEED macros (definitions not visible in the fetched diff -- treating as unverifiable risk, not reproducing).
+
+| `cff30dc4` | QSB_SLOTS 4->3 isolated from i34-9's bundle (host-only, carrier byte-identical) | f0e453d (995.33M) | pending | | | tests whether this one safe, fully-verified piece explains some/all/none of i34-9's gain |
