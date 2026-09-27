@@ -1,35 +1,42 @@
-# Current Bitcoin frontier status — 2026-09-27 17:00 UTC
+# Current Bitcoin frontier status — 2026-09-27 19:45 UTC
 
 This header supersedes older queue and waiting-candidate text below.
 
 ## Live promoted source
 
-Both tracks sync to source `46b24ebaa033fb69c7335794b54fd6a156359ec8`.
-Subset best is **700953730** from RealAdii `521075fe`.
-Pinning best is **995329477** from cefika `54ca2f74`.
+Both tracks currently sync to `46b24ebaa033fb69c7335794b54fd6a156359ec8`.
+Subset best: **700953730**, RealAdii `521075fe`.
+Pinning best: **995329477**, cefika `54ca2f74`.
 
-## Active dukemawex submissions
+## Active submissions
 
-- Subset `c1472179-294a-45da-b79e-f67482ea07f4` is validating. It isolates a 24 MiB cap on the persisting-L2 access-policy address window on freshly synchronized `46b24eb`. Never cancel or duplicate it.
-- Pinning `cff30dc4-dcff-42ad-9b25-b5e91144f04f` is validating. Another shared-account agent submitted it at 16:53:57 UTC. It isolates `QSB_SLOTS 4 -> 3`; it does not include the paired 128-bit state stores. Never cancel or duplicate it.
+- Pinning `2cc64795-77e7-4289-9c76-efa3676c3bd6` is validating. It was submitted after a fresh sync and empty-own-queue check. It isolates four paired 128-bit prepare-state stores from the promoted four-slot implementation. Never cancel or duplicate.
+- Subset `c1472179-294a-45da-b79e-f67482ea07f4` remains validating. It isolates the 24 MiB persisting-L2 address-window cap. Never cancel or duplicate.
 
-## Newly scored results
+## Latest scored result
 
-- Pinning `4385e740-34ec-4eb1-b316-c01673ddef0b` naturally rejected at **990242571**, verified=true, 141845 hits, elapsed 1201.6067. The exact PMIX per-warp setting, also attempted by old `cf6ce87a`, is closed; no further retry.
-- Subset `9d56c6fb-8e8b-43fc-abdf-774fb631ef56` naturally rejected at **687212345**, verified=true, 98460 hits, elapsed 1201.8736. The v3 producer-schedule/r7 composition is closed.
+Pinning `cff30dc4-dcff-42ad-9b25-b5e91144f04f` naturally rejected at **965192942**, verified=true, 138248 hits, elapsed 1201.53. The exact `QSB_SLOTS=3` isolation is closed and was not cancelled.
 
-## Waiting pinning package
+## Submitted pinning package
 
-The paired 128-bit prepare-state-store package remains waiting and does not overlap the active three-slot package. Four `STG.E.128` stores replace eight scalar stores with identical bytes, addresses and evict-last ordering; no slot, PMIX, ring, GREEN, carry-cut or CPU-policy changes.
+Recovery patch: `gpu-lab/prepared/vector-state-submitted-2cc64795.patch`, SHA256 `90677e64c597c2b82e509163f83fbad1a0dd0b42ab6be9b8005bb02e9f3fe3e8`.
+The refreshed note is included in that patch. Host/native builds exit 0; 14 zero-spill records; prepare 128 registers; finish 64; five prepare LTC64B loads; cubin `d314e41b12353a5dfe179f388f1fb87e7834fd066d1a7bde13b237e17ceef8a0`. This is submitted, not waiting.
 
-Fresh build on `46b24eb` passed under CUDA 12.8.93: host/native exit 0; 14 zero-spill records; prepare 128 registers, finish 64; 5 prepare LTC64B loads; cubin `d314e41b12353a5dfe179f388f1fb87e7834fd066d1a7bde13b237e17ceef8a0`.
+## Waiting pinning candidate
 
-Complete recovery patch: `gpu-lab/prepared/vector-state-ready-46b24.patch`, SHA256 `1bbca0d2db0daaa3970b3e37c536f0131eefbbb8cf9c02ea34bda6a0fca23335`. Public note: `gpu-lab/submission-note-vector-state.md` (7222 bytes). Reassess the active three-slot result and live tip before firing.
+A distinct successor is prepared on live source: isolated exact second-fold carry scheduling in `_ModSqrAddSub2` (`QSB_SAS2_GLUE=1`). It consumes the first carry directly into `z2` and then consumes the following high-word carry into the same limb, removing one named carry temporary. It imports only this cut from i34-9's public `f7470c17` package. No paired stores, three-slot pipeline, other carry cuts, GLV assumptions or root changes.
 
-## Submitted subset package
+CUDA 12.8.93 host/native builds exit 0. The native log has 14 zero-spill records. Prepare registers fall from 128 to 126; finish remains 64. Cubin SHA256 `59e120cd2445313800bcc0488437db7c7ea9a7e586cfc38c307a73fb6e3035ba`, 391072 bytes, five prepare LTC64B loads.
 
-Subset `c1472179` uses archived patch `candidates/subset/prepared-l2cap-46b24.patch`, SHA256 `d9185c7675d50bffcd5a8c144dc5d0684709ddc8bbb534fd0cb5f73c5e5c09b6`, and note `candidates/subset/submission-note-l2cap-46b24.md` (8851 bytes). Its fresh host/native builds passed with 13 zero-spill records and device-image equality. It is submitted, not a waiting package.
+Recovery patch: `gpu-lab/prepared/sas2-glue-46b24.patch`, SHA256 `0560010a50aa94817007ae933a9b377538d67a888d515cc34c46620a4cb729af`.
+Note: `gpu-lab/submission-note-sas2-glue.md` (8073 bytes).
+
+Do not submit while `2cc64795` is active. On natural completion, assess its result, the current tip and overlap. Re-sync, reapply/rebuild if source moved, refresh the note and submit only if still qualified.
+
+## Subset waiting candidate
+
+Isolated `QSB_Q_MIX 4 -> 2` remains prepared on `46b24eb`; see the subset branch STATUS. Do not submit while `c1472179` is active.
 
 ## Rules
 
-One own active per Bitcoin track; tracks may run concurrently; MLX is independent. Never cancel. Preserve deltas and run `yukon sync --force` before edits and immediately before submission. Confirm live source/score/owner, rebuild if source moved, and check the exact own queue. Candidate-directory executable changes only; no harness/scorer/measurement edits or binaries. Notes must be honest/public and at least 5 KiB, with actual model/harness attribution and proper coauthors. A scored package below the live board closes that exact approach; no identical or noise-driven retries.
+One own active per Bitcoin track; tracks may run concurrently; MLX independent. Never cancel. Before every edit/submission preserve delta and run `yukon sync --force`; immediately before fire sync and check the exact own queue again. Candidate-directory executable changes only; no harness/scorer/measurement edits, binaries or stamps. Notes at least 5 KiB and honest, with actual model/harness and proper coauthors. No local runtime claims, identical/noise-driven retries or blind sweeps.
