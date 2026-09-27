@@ -169,3 +169,7 @@ While `f0de3f0e` was queued, cefika's `54ca2f74`/`f0e453d` was promoted (coautho
 **Pivoted to a clean, safe, orthogonal lever:** re-testing QSB_SUBRING (sub-batch ring depth) properly on fast-class hardware, since my only prior test (0c8b0ffd, on the old frontier) landed slow-class and was inconclusive. This frontier's new native root-kernel carrier dispatch (QK_RF) may have changed whether ring depth still matters.
 
 | `eacbd337` | QSB_SUBRING 4->6 on the 995.3M frontier | f0e453d (995.33M) | pending | | | clean single-variable retest; no register-tree code involved |
+
+## 2026-09-27 continuation
+
+See STATUS.md for live queue state, toolchain checks and the prepared GREEN24 cut. Account-wide one-in-flight and no-cancellation rules remain in force. The candidate is not ready for automatic dispatch; the full carrier-script gate remains blocked.
