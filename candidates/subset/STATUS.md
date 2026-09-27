@@ -1,46 +1,20 @@
-# Current status — 2026-09-27 10:29 UTC
+# Current status — 2026-09-27
+Both Bitcoin tracks are active, one own validation per track. MLX is independent. Never cancel.
 
-This section supersedes all historical queue and waiting-candidate statements below.
+Live promoted source: f0e453daaf8b1af848e0bf4afd42fb730018c041.
+Subset best 691630437 / kshitij-hash d052bc3d. Pinning best 995329477 / cefika 54ca2f74.
 
-- Subset49f1ab79-c0e9-4723-828b-85d592210957: validating, isolated r7 CPU lane, submitted09:04UTC on f0e453d. No score yet.
-- Pinning62d66afd-484c-41f9-8e32-82d6c3085130: naturally rejected953239579 at09:58:42UTC, below995329477. Independent-root-queue approach CLOSED; do not replay saved dualroot patch.
-- GREEN24 2402ebc0 rejected958188986; ring6 eacbd337 rejected950985831. Both closed.
-- Both live frontiers unchanged and freshly Yukon-synced to f0e453daaf8b1af848e0bf4afd42fb730018c041: subset691630437/kshitij-hash, pinning995329477/cefika.
-- Both previously prepared patches have been SUBMITTED. There are currently NO qualified waiting replacements. Historical ready notes below are archival, not dispatch instructions.
-- User explicitly permits one active submission PER BITCOIN TRACK. MLX does NOT block Bitcoin. Never cancel any validation.
-- Latest user request: prepare next candidates once both submitted results land; subset still pending. Then start from then-live promoted tip, use both results, recheck tip before submission and rebuild if moved.
-- Submitted worktree deltas preserved in /tmp/pinning-submitted-1028.patch and /tmp/subset-submitted-1028.patch (plus pinning note), then sync reset execution source to frontier. Saved fork patches remain available as historical records; do not reapply closed/pending packages for another submission.
-- No new submission, cancellation, candidate code change or GPU run this check. Status-only persistence. Compile-only qualification remains authorized.
+Subset 49f1ab79-c0e9-4723-828b-85d592210957 naturally rejected at 693254524, updated 12:09:08 UTC. It beat the live score by 0.2348%, but missed the required 1% promotion margin. Verified=true, elapsed1201.8168,99321 hits. This does not establish repeatable gain; no identical retry.
 
-## Archived preparation record
+NEW subset 9d56c6fb-8e8b-43fc-abdf-774fb631ef56 submitted and validating. Base freshly synchronized f0e453d, live best unchanged, own subset queue empty before fire. Mechanism: v3 cached SHA schedules for the three floating host producers, composed with the previously tested r7 CPU lane. Keeps original spinning waits/main-core reservation and unchanged GPU code. Producer header is byte-identical to ercumentyildirim donor3b4fce1213a41ab5e2e96d7f038fdd88a07f2878 (a141df2b); donor's published score696429794 and component evidence are confounded and not claimed as this candidate's performance. Credits terrapinelf ercumentyildirim i34-9 Ryun1 Meganpark980320 kshitij-hash fkiene.
 
-# Quantum Bitcoin preparation status
+Full native carrier build and standard host nvcc build exit0.13 native zero-spill records. Cubin91948fc251250a6607615c28327b62892a26cc7ef1d62047eb9e42148fdb98b1 byte-equals frontier.3 digest LTC64B loads. tree.cu unchanged. Note9552 bytes. No local GPU/runtime/score claim; actual GPT(exact variant not exposed)/Codex metadata.
 
-Verified 2026-09-27. Both tracks active. Base source f0e453daaf8b1af848e0bf4afd42fb730018c041, confirmed by fresh Yukon sync after preparation.
+Archive: candidates/subset/prepared-r7-v3-f0e453d.patch and candidates/subset/submission-note-r7-v3.md. These are SUBMITTED records, not a waiting candidate. Older r7 patch is also submitted; do not replay.
 
-| Track | Live score / owner | Own active | Waiting candidate |
-| --- | --- | --- | --- |
-| Pinning | 995329477 / cefika | 2402ebc0-b474-4933-bbd7-b716d8717003, GREEN24, base f0e453d, validating | Independent root queues, ring4, GREEN20 |
-| Subset | 691630437 / kshitij-hash | None | Isolated r7 CPU lane, frontier GPU producers and spinning waits |
+Pinning07af5750-deb9-450f-91cc-e759f5ee4a5b remained validating at this check. Its busy-counter patch/note are archived on the pinning branch. Do not duplicate or cancel.
+No qualified replacement waiting candidate for either track yet. Continue preparing credible distinct replacements on live tip while these validations run.
 
-Shared-slot warning: a read-only check also found dukemawex MLX Fast submission 2a4bca33-d1ac-46a7-b365-a1ea9a013738 validating. MLX benchmark 9d563dbc-5f17-4636-9476-04dd6a24a6ad must be included in account-wide queue checks. Do not cancel either validation and do not add another until ALL own pending validations finish. This run submitted none.
+Closed pinning: GREEN24 958188986; ring6 950985831; dualroot953239579; RegisterRoots/WarpInverse/CyclicField combinations; PMIX12 warp replay draft dropped. Closed subset: paired-SHA ALU/full unroll, prep overlap, split verify, flag sweeps, chain-loop unroll/spills, GPU affine batch chain. A scored rejection below tip closes its exact approach; elapsed classes never justify identical retries.
 
-## Build-checked waiting packages
-
-Pinning patch gpu-lab/prepared/dualroot-complete-f0e453d.patch; public note gpu-lab/submission-note-dualroot-ready.md. Patch SHA256 632b6ea120b41bf00507e2c7a30757c906c947febef6a3ec3366e03be309c0c9. Source only changes queue topology and development disassembler fallback. Ring4, GREEN20, kernel arithmetic and carrier bytes remain promoted. Full carrier script and standard host compile exit0. CUDA12.8.93 native log has14 zero-spill records, no nonzero spills; cubin625c22c4298276a77064a5570a38821e8f97a7f6620596f961e945708d5a9bbd equals frontier. Dependency DAG over10000 sub-batches is acyclic; this is structural analysis, not CUDA execution. Credits ssalmeock jacklightChen ercumentyildirim terrapinelf cefika DPZZxlz hybridnoise. Prior47ead940 combined dual roots with ring6 and rejected; this isolates dual roots without ring6.
-
-Subset patch candidates/subset/prepared-r7-f0e453d.patch; note candidates/subset/prepared-r7-note.md on branch claude/awesome-franklin-izo2f3. Patch SHA256 5c15d2f95f10d9c25f9842b53d21ea533fd33dad31c8c77c4adc2bdc8e5a7dca. Donor CpuGrindSubset.h from public9591808166fe1ce417278f66ee4b3032f41bb9fc, only qhp::g_share_cpu producer-specific worker hook removed. Frontier producer implementation, wait policy and reserved main core retained. Host and full carrier builds exit0;13 zero-spill records, no nonzero spills; cubin91948fc251250a6607615c28327b62892a26cc7ef1d62047eb9e42148fdb98b1 equals frontier. Carrier source fingerprint regenerated. Credits i34-9 terrapinelf Ryun1 Meganpark980320 ercumentyildirim kshitij-hash fkiene. Published donor CPU component provides rationale, not measured performance of this composition.
-
-Both notes exceed5KiB. Neither package ran locally or on Yukon. Compilation and exactness arguments qualify under the user's latest compile-only policy; performance remains unknown. Prepared patches include the submission note. Prefer subset isolated CPU lane next because published component evidence is stronger; re-evaluate live results and promotions first.
-
-## Dispatch and recovery
-
-Preserve local patches; sync --force to then-live tip before edits/submission. Apply saved patch only if still relevant and not subsumed. If tip changes rebuild/review from it. Check BOTH tracks plus MLX Fast for exact solverUsername=dukemawex pending/validating/queued records; do not search note text for ownership. Never cancel. No identical replay, no frontier repackaging, no arbitrary sweeps, no GPU spend. Use actual exposed GPT model attribution and Codex harness, not Grok labels. Only candidate path code; no binaries/build stamps or harness/measurement edits.
-
-CLI /root/.local/bin/yukon. CUDA /workspace/scratch/3f30f825fbc0/cuda-toolkit/usr/local/cuda-12.8. Carrier scripts use nvdisasm when cuobjdump -sass crashes, retaining exact symbol/section and LTC64B gates. This is resolved, not a remaining build blocker.
-
-GitHub fork dukemawex/quantum-safe-bitcoin-challenge. Pinning branch claude/magical-allen-bn3ywg; subset branch claude/awesome-franklin-izo2f3. Shell git is unauthenticated for pushes; use authenticated connector. Yukon sync resets local branch and rewrites origin to upstream; never push origin blindly. Remote branches preserve patch artifacts, not necessarily a ready execution tree. Restore code by syncing then applying patch.
-
-## Closed approaches
-
-Pinning RegisterRoots/WarpInverse/CyclicField compositions; ring6 (eacbd337 rejected950985831, elapsed1201.0178); PMIX12 warp replay draft dropped. Do not infer retest eligibility from elapsed-time classes. Subset paired-SHA ALU/unroll, prep overlap, split verify, flag sweeps, chain-loop unroll/spills, GPU affine batch chain closed. Any scored rejection without beating tip closes the exact new approach.
+Before edits/submission save delta, yukon sync --force, confirm live base, reassess/rebuild if moved. Only candidates/<track>/ executable changes, no harness/measurement changes, no binaries/stamps. Notes>=5KiB, actual attribution and proper coauthors. No GPU spend. Fetch explicit fork refs before connector commits and force:false updates; sync rewrites origin to upstream. Only designated branches.
