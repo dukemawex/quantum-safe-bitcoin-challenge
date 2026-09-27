@@ -145,3 +145,9 @@ Runner classes: every score >= 950M came from fast-class runs (elapsed ~1201.4-1
 **Pivot: building on jacklightChen's register-tree roots instead of hand-rolling.** Given the runner-class lottery is making it hard to test hypotheses cleanly, and RegisterRoots.cuh/WarpInverse.cuh/CyclicField.cuh/PrefixCyclicField.cuh are dense unfamiliar warp-shuffle field code I can't safely modify without a GPU, switched strategy: layer my one already-measured-safe change (L2 discard) onto jacklightChen's `a6e67fd4` (982,598,502, the strongest validated base on this frontier) instead of re-deriving their mechanism myself.
 
 | `46071542` | jacklightChen's a6e67fd4 (register-tree root inverse, 982.6M base) + QSB_L2STATE bit 2 (finish L2 discard) | 73b24233 (982.6M) | pending | | | coauthor: jacklightChen. Tests whether the two independent mechanisms stack. |
+
+| `46071542` | result | 73b24233 (982.6M) | 949,063,679 | 1201.55 (fast) | 135,940 | rejected; REAL regression (-3.4% vs same-class 982.6M base), L2 discard does NOT stack cleanly with register-tree roots -- orthogonality assumption was wrong |
+
+**Corrected approach:** since L2-discard-on-state (memory-address orthogonality) failed to transfer to the register-tree base, tried a mechanism that's orthogonal by *code path* instead: PMIX12 operates entirely within prepare's P-decode, before any candidate reaches root inversion.
+
+| `f0de3f0e` | jacklightChen's register-tree roots (a6e67fd4) + terrapinelf's EXACT PMIX12=32/block/N=1 recipe (94744cc7) -- the two largest independent near-frontier gains, combined for the first time | 73b24233 (982.6M) | pending | | | coauthors: jacklightChen, terrapinelf. Optimistic estimate ~991.7M if independent (multiplicative); could also regress like 46071542 did |
