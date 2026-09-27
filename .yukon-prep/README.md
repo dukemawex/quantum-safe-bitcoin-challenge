@@ -15,3 +15,11 @@ New record kshitij-hash `d052bc3d` (61cb94f, 691,630,437). N7's GPU change (pair
 `df82b24f…` (574,368 B), 0 spills; record image reproduces byte for byte locally; setup.sh smoke
 test passed. Patch (excluding carrier): `n8-vs-61cb94f.diff`. Submit with
 `--coauthors kshitij-hash,Meganpark980320`.
+
+## Results (2026-09-27 02:35 UTC)
+- N6 `6975ad8c` (296e5e53 + ALU adds): 670,445,022; self-reported 955.0G vs 956.1G base.
+- N8 `1207a5c2` (d052bc3d + ALU adds + const unroll): 678,552,119; self-reported 999.1G vs
+  1,006.4G record (-0.7%), hit/self ratio 0.816 vs 0.826.
+- Conclusion: the paired-SHA line (unroll, ALU adds) is inert-to-negative on the ranked 4090.
+  Closed. Start-up is ~1 s (not a lever). Active gains elsewhere are on the CPU co-grinder
+  (HyeokxC 888f5fce: 693.1M, +0.2%, host-only).
