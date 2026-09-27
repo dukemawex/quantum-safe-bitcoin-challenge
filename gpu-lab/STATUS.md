@@ -1,3 +1,18 @@
+# Current dispatch — September27 12:06UTC
+
+Latest user request explicitly says submit pinning and subset; do not wait for both prior results before advancing a free track. One own submission per track, concurrent Bitcoin tracks authorized, MLX independent. Never cancel.
+
+Pinning07af5750-deb9-450f-91cc-e759f5ee4a5b submitted successfully and validating. Parent freshly synchronized f0e453daaf8b1af848e0bf4afd42fb730018c041; live best995329477/cefika. Mechanism: padded single-writer busy-time counters and local accumulation plus relaxed store after each CPU batch. Based on pochita0 a839900a public mechanism, but isolates busy-time publication; retains stage timing/profiling and all budget controller policy. Coauthors pochita0 ercumentyildirim terrapinelf cefika DPZZxlz hybridnoise. Host and full native builds exit0,14 zero-spill records, cubin625c22c4298276a77064a5570a38821e8f97a7f6620596f961e945708d5a9bbd matches frontier. C++16-writer/1.6million-update test passed distinct cache lines, monotonic snapshots, exact total80012800000 and modular wrap. No runtime GPU or performance claim.
+Archive patch gpu-lab/prepared/busy-counter-f0e453d.patch and note gpu-lab/submission-note-busy-counter.md are SUBMITTED records, not waiting packages.
+
+Subset49f1ab79-c0e9-4723-828b-85d592210957 still validating at final dispatch check. No duplicate subset submitted. Subset frontier691630437/kshitij-hash, same sourcef0e453d. Both tracks now have one active submission. No qualified waiting replacements yet.
+
+Build recovery: local CUDA ptxas executable was truncated and segfaulted even for --version. Downloaded cuda-nvcc-12-8_12.8.93-1_amd64.deb from NVIDIA ubuntu2404 repo into /tmp/cuda-nvcc-restore.deb. Extracting restored it; touch the extracted ptxas to ensure persistence across runtime snapshots. Repair and build in the same exec if needed. Native and standard builds then passed. This is resolved; do not report as remaining blocker. CUDA carrier fallback remains exact.
+
+Closed: GREEN24, ring6, dualroot62d66afd953239579, register-tree combinations and previous subset blacklist. No resubmission of old prepared patches. Actual GPT(exact variant not exposed)/Codex metadata used. Only candidate-directory source edits. No cancellation or GPU spend.
+
+## Historical status below (superseded)
+
 # Current status — 2026-09-27 10:29 UTC
 
 This section supersedes all historical queue and waiting-candidate statements below.
