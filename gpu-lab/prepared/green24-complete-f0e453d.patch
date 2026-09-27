@@ -1,0 +1,87 @@
+diff --git a/candidates/pinning/build_carrier.sh b/candidates/pinning/build_carrier.sh
+index 25c0849..f2d77d5 100755
+--- a/candidates/pinning/build_carrier.sh
++++ b/candidates/pinning/build_carrier.sh
+@@ -10,7 +10,10 @@ W=$(mktemp -d)   # logs and the raw cubin stay out of the submission directory
+ nvcc -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin \
+      -Xptxas -v -o "$W/c.cubin" pinning.cu 2> "$W/ptxas.log"
+ cuobjdump -symbols "$W/c.cubin" > "$W/symbols.txt"
+-cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"
++if ! cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump disassembly failed; checking the same cubin with nvdisasm" >&2
++    nvdisasm "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -42,8 +45,15 @@ for g in ("qsb_carrier_zeros", "pin_u2rx_words", "pin_u2ry_words", "pin_iso_invu
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the prepare kernel (the only table reader on the hot path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-s0 = [b for b in fn if b.startswith(names[0])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    s0 = [b for b in fn if b.startswith(names[0] + "\n") or b.startswith(names[0] + " ")]
++else:
++    # nvdisasm emits ELF text sections. Match the exact entry symbol, and
++    # confine the load-policy check to that section, not unrelated kernels.
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    s0 = [sections[i + 1] for i in range(1, len(sections) - 1, 2)
++          if sections[i] == names[0]]
+ if not s0 or "LTC64B" not in s0[0]:
+     sys.exit("build_carrier: prepare kernel has no LDG.E.LTC64B load")
+ n_hint = s0[0].count("LTC64B")
+diff --git a/candidates/pinning/pinning.cu b/candidates/pinning/pinning.cu
+index efe7ff6..f2f9f9e 100644
+--- a/candidates/pinning/pinning.cu
++++ b/candidates/pinning/pinning.cu
+@@ -3,7 +3,7 @@
+ #define QSB_SUBRING 4
+ #define QSB_ROOT_FUSED 1
+ #define QSB_L2STATE 1033 /* 1 | 8 (state stores evict_last) | 1024 (finish discards consumed state lines); from PR #1891 */
+-#define QSB_GREEN 20
++#define QSB_GREEN 24
+ #define QSB_GREEN_SHARED 8
+ #ifndef QSB_CODEX_DRAW_20260924_C
+ #define QSB_CODEX_DRAW_20260924_C 1 /* no runtime effect; identifies the ranked GLV-lean control draw */
+diff --git a/candidates/pinning/submission-note.md b/candidates/pinning/submission-note.md
+new file mode 100644
+index 0000000..3cb0567
+--- /dev/null
++++ b/candidates/pinning/submission-note.md
+@@ -0,0 +1,34 @@
++# Prepared pinning cut: 24-SM finish partition on the promoted frontier
++
++Prepared on 2026-09-27 by the assistant in Codex. This is not a submission and contains no local performance claim. The submitting agent must supply its actual verified model identity and harness; Grok attribution must not be used for work performed in Codex.
++
++## Current context and rationale
++
++The live promoted source is f0e453daaf8b1af848e0bf4afd42fb730018c041, cefika's 54ca2f74, at 995,329,477. The one-percent promotion threshold is 1,005,282,771.77. Yukon sync --force was executed before the edit and confirmed that SHA. The active account submission eacbd337 remains validating; do not cancel it or submit this while the account slot is occupied, on either track.
++
++This follows the promoted note's explicit next-step recommendation: use a 24-SM finish partition. Change only QSB_GREEN from 20 to 24, retaining GREEN_SHARED=8, SUBRING=4, the promoted block-uniform PMIX12 settings, root dispatch, CPU co-grinder and state-cache policy. The finish stage gets four additional SMs, while the prepare-side partition gives up four exclusive SMs; eight remain shared. This can improve pipeline balance if finish service time is the limiting stage. It can also regress if preparation is the bottleneck, or if resource sharing and power limits dominate. No parameter sweep or other cut is bundled here.
++
++The promoted author's note reports +0.4% on a lab RTX4090 for this point. That is attributed predecessor evidence, not a measurement made here, and it is below the required one-percent threshold. It does not establish that this package will promote. No guarantee of strict improvement is possible before the official score. If the user requires evidence exceeding one percent before pinning submission as well as subset, hold this cut pending stronger evidence.
++
++## Exactness and source scope
++
++QSB_GREEN is used by host-side green-context creation, not by candidate arithmetic. Both pipeline streams retain their existing dependencies, indexing, memory layout, and event flow. The host selects resources for the same kernels; no candidate is deliberately dropped, duplicated, filtered differently, or hashed differently. Kernel code, recovery mathematics, the publication gate and all verifier-facing formats remain the promoted implementation. Existing fallback behavior remains unchanged. No harness, measurement, workflow or problem file is edited.
++
++## Actual checks in this environment
++
++CUDA nvcc 12.8.93 was installed by extracting official NVIDIA packages into the local scratch toolchain. The ordinary host command nvcc -O3 -DQSB_ZEROS_N=24 -o /tmp/pinning-green24 pinning.cu -lcrypto -lm completed with exit zero; diagnostics were inherited OpenSSL deprecation warnings. The executable is outside the candidate directory and was not run.
++
++The native compilation phase of build_carrier.sh 24 succeeded. All fourteen resource records report zero spill stores and zero spill loads. The generated cubin is byte-for-byte equal to the promoted embedded cubin: SHA256 625c22c4298276a77064a5570a38821e8f97a7f6620596f961e945708d5a9bbd. Equality was checked on decoded bytes, not merely on a header comment. Thus the promoted carrier is already the exact device image compiled from this host-only edit.
++
++The initial build_carrier.sh attempt failed because cuobjdump -sass segfaults in this container. The candidate development script now falls back to the official nvdisasm tool on the exact same cubin. Its parser selects the exact prepare-kernel ELF text section and enforces the same LTC64B load-policy check. Symbol checks still use cuobjdump -symbols, which works. Failure of both disassemblers or a missing prepare hint still aborts generation. This is a development-tool portability fix; it does not alter the benchmark harness, GPU binary or scoring. A matching cubin proves device-image identity but is not a runtime test. There is no local GPU test, setup smoke test, measured speedup, verified-hit claim or official result for this package.
++
++## Dispatch and provenance
++
++Before dispatch refresh the account queues for both tracks, naturally await the occupied slot, sync again, confirm the current best source SHA, and reapply this single source hunk only if it still fits that frontier. Rebuild after any tip movement. Record the completed carrier build result and preserve its actual diagnostics. Attach a public note of at least5KiB and credit cefika, DPZZxlz, terrapinelf, ercumentyildirim and hybridnoise for the inherited composition and recommended partition experiment. Retain source licenses. Never include compiler binaries, credentials or temporary measurements in the package.
++
++The earlier PMIX12 warp-granularity draft was dropped before submission under the user's tightened no-failed-approach-replay rule. This cut follows the tip's own recommendation instead. Register-tree combinations remain blacklisted. If this exact partition change receives a scored rejection without beating tip, blacklist it rather than replaying it on a favorable-noise theory.
++
++
++## Limits on expected improvement
++
++The original laboratory estimate remains only +0.4 percent and comes from another author. It cannot be upgraded into a measured one-percent gain by a successful compile. The user has explicitly requested preparing and submitting a frontier-based candidate, so this cut is a ranked test of the frontier author's own proposed next step. The official result may reject it. Do not submit to fill a slot if a changed frontier has already absorbed this setting, if the code is byte-identical to an earlier package, or if another account submission remains active. No cancellation or parallel validation is authorized. The extra disassembly path only repairs reproducible development tooling and must not be claimed as a runtime speed improvement.

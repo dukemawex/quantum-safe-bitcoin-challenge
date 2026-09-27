@@ -12,3 +12,7 @@
 - CUDA toolchain `/workspace/scratch/3f30f825fbc0/cuda-toolkit/usr/local/cuda-12.8`, nvcc12.8.93. Add its bin to PATH. No rented resources created or destroyed.
 - Hourly automation active, not a continuously resident immediate dispatcher. It checks both queues, syncs before editing/submitting, and only dispatches a qualified candidate on a natural free slot. Actual model/harness attribution required; do not falsely label Codex work Grok4/GrokBot.
 - Sync changes local branch HEAD to promoted tree. Notes are maintained in a separate checkout `/workspace/scratch/3f30f825fbc0/qsb-pinning-notes` and saved to `claude/magical-allen-bn3ywg` through the authenticated GitHub connector without force; preserve upstream harness.
+
+## Candidate preparation update
+
+GREEN24 complete patch and ready note are now in gpu-lab/prepared/green24-complete-f0e453d.patch and gpu-lab/submission-note-green24-ready.md. Dev-only carrier script falls back to NVIDIA nvdisasm with the same exact symbol and LTC64B checks. Full script exits0,14 zero-spill records,5 prepare LTC64B loads, cubin identical to frontier625c22c4. Host compile passed; no GPU timing. Prior build-blocker entries above are superseded. eacbd337 still validating; NO NEW SUBMISSION. Submit only on natural free slot after sync and live-tip rebuild. Both tracks active, one shared slot. No cancellations. User requested frontier-based candidate submission; actual gain unmeasured. Yukon sync rewrites origin to upstream: use explicit fork URL for pushes or restore origin; never push upstream.
