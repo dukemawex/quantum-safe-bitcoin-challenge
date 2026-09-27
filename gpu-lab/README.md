@@ -161,3 +161,11 @@ While `f0de3f0e` was queued, cefika's `54ca2f74`/`f0e453d` was promoted (coautho
 **Re-integrated register-tree roots onto the NEW frontier** (rewrote the 3-way selector to also preserve f0e453d's new QK_RF carrier dispatch, which didn't exist when jacklightChen wrote their original integration).
 
 | `02a847b9` | jacklightChen's register-tree roots layered onto f0e453d (995.3M), preserving its new QK_RF carrier dispatch as fallback | f0e453d (995.33M) | pending | | | coauthor: jacklightChen. Needs ~1,005.3M to promote. Tests whether register-tree roots compose with the actual strongest known base, after regressing (-3.4%) against an older/weaker combination |
+
+| `02a847b9` | result | f0e453d (995.3M) | 26,201,910 | 1200.25 | 3,749 | rejected; CORRECTNESS BUG not perf regression -- candidates_self_reported ~1.21T (normal) but verified_hits only 3,749 (~72,500 expected) -- register-tree computed wrong roots for most sub-batches on this base; host OpenSSL gate correctly dropped every wrong candidate, no bad hit ever published |
+
+**Register-tree investigation CLOSED.** Both terrapinelf (9b633d47, gave register-tree its own QsbCarrier.h native-dispatch entry, more thorough than mine) and jacklightChen's own new attempt (654f05fc) independently tried the same combination around the same time. Neither promoted: terrapinelf 991,732,208 (-0.36%), jacklightChen 859,419,979 (-13.6%). Even correct integrations by more careful hands (including the mechanism's own author) show no net gain. Register-tree roots do not compose with this frontier's current mix -- not pursuing this further this session.
+
+**Pivoted to a clean, safe, orthogonal lever:** re-testing QSB_SUBRING (sub-batch ring depth) properly on fast-class hardware, since my only prior test (0c8b0ffd, on the old frontier) landed slow-class and was inconclusive. This frontier's new native root-kernel carrier dispatch (QK_RF) may have changed whether ring depth still matters.
+
+| `eacbd337` | QSB_SUBRING 4->6 on the 995.3M frontier | f0e453d (995.33M) | pending | | | clean single-variable retest; no register-tree code involved |
