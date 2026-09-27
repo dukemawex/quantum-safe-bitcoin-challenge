@@ -178,6 +178,17 @@ See STATUS.md for live queue state, toolchain checks and the prepared GREEN24 cu
 
 This update supersedes the old carrier build-blocker and empty-backlog notices. GREEN24 2402ebc0 remains validating; ring6 eacbd337 rejected950985831 and is closed. Both frontiers remain f0e453d (pinning995329477, subset691630437). Independent-root/ring4 pinning and isolated-r7-CPU subset candidates now have successful host/native builds, zero-spill native logs, frontier-identical cubins and honest notes over5KiB. Neither was run locally. See STATUS.md for exact patches, hashes, credits and dispatch rules. Another own MLX validation was discovered, so the shared account slot is not free even if pinning finishes first. No submission or cancellation was performed this run.
 
-## 2026-09-27 07:22UTC result check
+# Current status — 2026-09-27 10:29 UTC
 
-GREEN24 2402ebc0 naturally rejected958188986 (elapsed1201.593,137252 verified hits),3.73% below995329477. Close this exact approach. Both live frontiers unchanged atf0e453d. Build-checked subset r7 isolation and pinning independent-root/ring4 backups retained and cleanly reapplied after sync. No own QSB validation active; own MLX41fada62 validating holds shared slot. No submission or cancellation. See STATUS.md.
+This section supersedes all historical queue and waiting-candidate statements below.
+
+- Subset49f1ab79-c0e9-4723-828b-85d592210957: validating, isolated r7 CPU lane, submitted09:04UTC on f0e453d. No score yet.
+- Pinning62d66afd-484c-41f9-8e32-82d6c3085130: naturally rejected953239579 at09:58:42UTC, below995329477. Independent-root-queue approach CLOSED; do not replay saved dualroot patch.
+- GREEN24 2402ebc0 rejected958188986; ring6 eacbd337 rejected950985831. Both closed.
+- Both live frontiers unchanged and freshly Yukon-synced to f0e453daaf8b1af848e0bf4afd42fb730018c041: subset691630437/kshitij-hash, pinning995329477/cefika.
+- Both previously prepared patches have been SUBMITTED. There are currently NO qualified waiting replacements. Historical ready notes below are archival, not dispatch instructions.
+- User explicitly permits one active submission PER BITCOIN TRACK. MLX does NOT block Bitcoin. Never cancel any validation.
+- Latest user request: prepare next candidates once both submitted results land; subset still pending. Then start from then-live promoted tip, use both results, recheck tip before submission and rebuild if moved.
+- Submitted worktree deltas preserved in /tmp/pinning-submitted-1028.patch and /tmp/subset-submitted-1028.patch (plus pinning note), then sync reset execution source to frontier. Saved fork patches remain available as historical records; do not reapply closed/pending packages for another submission.
+- No new submission, cancellation, candidate code change or GPU run this check. Status-only persistence. Compile-only qualification remains authorized.
+
