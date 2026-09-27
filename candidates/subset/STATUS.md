@@ -1,13 +1,13 @@
 # Quantum Bitcoin preparation status
 
-Verified 2026-09-27. Both tracks active. Base source f0e453daaf8b1af848e0bf4afd42fb730018c041, confirmed by fresh Yukon sync after preparation.
+Verified 2026-09-27 07:22 UTC (08:22 WAT). Both tracks active. Base source f0e453daaf8b1af848e0bf4afd42fb730018c041, confirmed by fresh Yukon sync after preparation.
 
 | Track | Live score / owner | Own active | Waiting candidate |
 | --- | --- | --- | --- |
-| Pinning | 995329477 / cefika | 2402ebc0-b474-4933-bbd7-b716d8717003, GREEN24, base f0e453d, validating | Independent root queues, ring4, GREEN20 |
+| Pinning | 995329477 / cefika | None; GREEN24 2402ebc0 rejected958188986 | Independent root queues, ring4, GREEN20 |
 | Subset | 691630437 / kshitij-hash | None | Isolated r7 CPU lane, frontier GPU producers and spinning waits |
 
-Shared-slot warning: a read-only check also found dukemawex MLX Fast submission 2a4bca33-d1ac-46a7-b365-a1ea9a013738 validating. MLX benchmark 9d563dbc-5f17-4636-9476-04dd6a24a6ad must be included in account-wide queue checks. Do not cancel either validation and do not add another until ALL own pending validations finish. This run submitted none.
+Shared-slot warning: a read-only check also found dukemawex MLX Fast submission 41fada62-3277-40c9-adf9-ea984df33519 validating (created07:18UTC). Previous MLX2a4bca33 naturally rejected. MLX benchmark 9d563dbc-5f17-4636-9476-04dd6a24a6ad must be included in account-wide queue checks. Do not cancel the validation and do not add another until ALL own pending validations finish. This run submitted none.
 
 ## Build-checked waiting packages
 
@@ -27,4 +27,8 @@ GitHub fork dukemawex/quantum-safe-bitcoin-challenge. Pinning branch claude/magi
 
 ## Closed approaches
 
-Pinning RegisterRoots/WarpInverse/CyclicField compositions; ring6 (eacbd337 rejected950985831, elapsed1201.0178); PMIX12 warp replay draft dropped. Do not infer retest eligibility from elapsed-time classes. Subset paired-SHA ALU/unroll, prep overlap, split verify, flag sweeps, chain-loop unroll/spills, GPU affine batch chain closed. Any scored rejection without beating tip closes the exact new approach.
+Pinning GREEN24 finish partition20->24 (2402ebc0 rejected958188986 vs995329477, elapsed1201.593,137252 verified hits, verified=true); RegisterRoots/WarpInverse/CyclicField compositions; ring6 (eacbd337 rejected950985831, elapsed1201.0178); PMIX12 warp replay draft dropped. Do not infer retest eligibility from elapsed-time classes. Subset paired-SHA ALU/unroll, prep overlap, split verify, flag sweeps, chain-loop unroll/spills, GPU affine batch chain closed. Any scored rejection without beating tip closes the exact new approach.
+
+## Latest queue check
+
+GREEN24 naturally completed at06:35:53UTC on September27. Score958188986 is3.73% below frontier; exact GREEN24 approach closed, no noise-based retry. Both QSB own queues empty. MLX41fada62 remains validating, so account-wide slot not free. Both prepared patches preserved before fresh sync, live f0e453d confirmed and patches reapplied cleanly; source unchanged so previous build qualification remains applicable. No code edits, new submissions or cancellations this check. Refresh public note queue paragraph before eventual dispatch.
