@@ -1,25 +1,30 @@
-# Quantum Safe Bitcoin loop status
+# Quantum Bitcoin preparation status
 
-Updated 2026-09-27 approximately05:00UTC. Both tracks active; one shared account-wide validation slot.
+Verified 2026-09-27. Both tracks active. Base source f0e453daaf8b1af848e0bf4afd42fb730018c041, confirmed by fresh Yukon sync after preparation.
 
-## Live board and account queue
-- Promoted source: f0e453daaf8b1af848e0bf4afd42fb730018c041 (confirmed by subset sync this run).
-- Pinning frontier:995329477, cefika54ca2f74.
-- Subset frontier:691630437, kshitij-hash d052bc3d.
-- Current own in-flight:pinning2402ebc0-b474-4933-bbd7-b716d8717003, validating, GREEN24, parentf0e453d.
-- Prior pinningeacbd337 naturally rejected950985831, elapsed1201.0178. Ring6 is closed. No cancellation.
-- Own subset in-flight:none.
+| Track | Live score / owner | Own active | Waiting candidate |
+| --- | --- | --- | --- |
+| Pinning | 995329477 / cefika | 2402ebc0-b474-4933-bbd7-b716d8717003, GREEN24, base f0e453d, validating | Independent root queues, ring4, GREEN20 |
+| Subset | 691630437 / kshitij-hash | None | Isolated r7 CPU lane, frontier GPU producers and spinning waits |
 
-## Prepared and submitted work
-GREEN24 was SUBMITTED; do not resubmit its saved patch. Complete build passed CUDA12.8.93 host compile and full carrier script with NVIDIA nvdisasm fallback. Fourteen zero-spill records, five prepare LTC64B loads, cubin byte-identical625c22c4. No local GPU execution or performance claim. The saved source patch and note remain under gpu-lab/prepared/green24-complete-f0e453d.patch and gpu-lab/submission-note-green24-ready.md; the submitted note also records ring6's rejection and final attribution. Current changes on the local pinning tree are the submitted package.
+Shared-slot warning: a read-only check also found dukemawex MLX Fast submission 2a4bca33-d1ac-46a7-b365-a1ea9a013738 validating. MLX benchmark 9d563dbc-5f17-4636-9476-04dd6a24a6ad must be included in account-wide queue checks. Do not cancel either validation and do not add another until ALL own pending validations finish. This run submitted none.
 
-Neither track currently has a second qualified waiting package. Preparing one for each remains highest priority while2402ebc0 validates. Do not label a hypothesis qualified or fill the slot with an inert replay.
+## Build-checked waiting packages
 
-## Subset review this run
-Fetched and diffed i34-9eb9ee8f3/9591808166fe1ce417278f66ee4b3032f41bb9fc against promotedf0e453d. It replaces much of CpuGrindSubset.h and host_producers.h, includes blocking waits, and changes a GPU-source default. It also contains a compiled subset executable and .subset.build: never copy those into a candidate. New public note8009bfb9 attributes59.85M CPU throughput to that package versus48.31M at the crown, but its GPU part is634.72M versus643.32M. This is not proof of an independently stackable >1percent total gain. Its co-grinder derives from terrapinelfr7 and includes safegcd, fused arithmetic, prefetch and10-window geometry.
-New ercumentyildirim6f332218 reuses the already-scored a7727680 host composition (689.87M) and changes Q_MIX4to2. fkiene8009bfb9 bundles four GPU settings with i34's host; its own note admits that exact host/GPU composition was not measured before submission. Both remain validating. No speculative port or parameter sweep performed. Need isolate and validate a genuine improvement, or wait for stronger ranked evidence, before subset qualification.
-Pinning newjordan1a116ba7 and ercumentyildirimb5ed5218 IFMA co-grinder submissions remain validating; their notes identify potentially useful CPU work, not a license to duplicate their unpromoted packages.
+Pinning patch gpu-lab/prepared/dualroot-complete-f0e453d.patch; public note gpu-lab/submission-note-dualroot-ready.md. Patch SHA256 632b6ea120b41bf00507e2c7a30757c906c947febef6a3ec3366e03be309c0c9. Source only changes queue topology and development disassembler fallback. Ring4, GREEN20, kernel arithmetic and carrier bytes remain promoted. Full carrier script and standard host compile exit0. CUDA12.8.93 native log has14 zero-spill records, no nonzero spills; cubin625c22c4298276a77064a5570a38821e8f97a7f6620596f961e945708d5a9bbd equals frontier. Dependency DAG over10000 sub-batches is acyclic; this is structural analysis, not CUDA execution. Credits ssalmeock jacklightChen ercumentyildirim terrapinelf cefika DPZZxlz hybridnoise. Prior47ead940 combined dual roots with ring6 and rejected; this isolates dual roots without ring6.
 
-## Rules and operational facts
-Sync --force before edits and before submit; if tip moves rebuild. Preserve work as patches before sync. It resets local branch HEAD and rewrites origin to upstream, so never rely on origin for fork pushes; use GitHub connector or explicit fork URL. Push only designated branch per track. Exact rejected approaches closed: register-tree combinations, ring6, paired-SHA ALU/unroll subset, PMIX12 warp replay. Never cancel, never fabricate local score/model identity, never alter harness or measurement code. Use actual exposed model/harness attribution and public notes>=5KiB, credit contributors. GPU spend requires prior approval; none incurred.
-GitHub connector authenticated asdukemawex with write access. Shell git has no push credentials. Notes persist on claude/magical-allen-bn3ywg. Subset persistence branch claude/awesome-franklin-izo2f3. Scheduled checks are hourly, not a guarantee of immediate dispatch.
+Subset patch candidates/subset/prepared-r7-f0e453d.patch; note candidates/subset/prepared-r7-note.md on branch claude/awesome-franklin-izo2f3. Patch SHA256 5c15d2f95f10d9c25f9842b53d21ea533fd33dad31c8c77c4adc2bdc8e5a7dca. Donor CpuGrindSubset.h from public9591808166fe1ce417278f66ee4b3032f41bb9fc, only qhp::g_share_cpu producer-specific worker hook removed. Frontier producer implementation, wait policy and reserved main core retained. Host and full carrier builds exit0;13 zero-spill records, no nonzero spills; cubin91948fc251250a6607615c28327b62892a26cc7ef1d62047eb9e42148fdb98b1 equals frontier. Carrier source fingerprint regenerated. Credits i34-9 terrapinelf Ryun1 Meganpark980320 ercumentyildirim kshitij-hash fkiene. Published donor CPU component provides rationale, not measured performance of this composition.
+
+Both notes exceed5KiB. Neither package ran locally or on Yukon. Compilation and exactness arguments qualify under the user's latest compile-only policy; performance remains unknown. Prepared patches include the submission note. Prefer subset isolated CPU lane next because published component evidence is stronger; re-evaluate live results and promotions first.
+
+## Dispatch and recovery
+
+Preserve local patches; sync --force to then-live tip before edits/submission. Apply saved patch only if still relevant and not subsumed. If tip changes rebuild/review from it. Check BOTH tracks plus MLX Fast for exact solverUsername=dukemawex pending/validating/queued records; do not search note text for ownership. Never cancel. No identical replay, no frontier repackaging, no arbitrary sweeps, no GPU spend. Use actual exposed GPT model attribution and Codex harness, not Grok labels. Only candidate path code; no binaries/build stamps or harness/measurement edits.
+
+CLI /root/.local/bin/yukon. CUDA /workspace/scratch/3f30f825fbc0/cuda-toolkit/usr/local/cuda-12.8. Carrier scripts use nvdisasm when cuobjdump -sass crashes, retaining exact symbol/section and LTC64B gates. This is resolved, not a remaining build blocker.
+
+GitHub fork dukemawex/quantum-safe-bitcoin-challenge. Pinning branch claude/magical-allen-bn3ywg; subset branch claude/awesome-franklin-izo2f3. Shell git is unauthenticated for pushes; use authenticated connector. Yukon sync resets local branch and rewrites origin to upstream; never push origin blindly. Remote branches preserve patch artifacts, not necessarily a ready execution tree. Restore code by syncing then applying patch.
+
+## Closed approaches
+
+Pinning RegisterRoots/WarpInverse/CyclicField compositions; ring6 (eacbd337 rejected950985831, elapsed1201.0178); PMIX12 warp replay draft dropped. Do not infer retest eligibility from elapsed-time classes. Subset paired-SHA ALU/unroll, prep overlap, split verify, flag sweeps, chain-loop unroll/spills, GPU affine batch chain closed. Any scored rejection without beating tip closes the exact new approach.

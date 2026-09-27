@@ -173,3 +173,7 @@ While `f0de3f0e` was queued, cefika's `54ca2f74`/`f0e453d` was promoted (coautho
 ## 2026-09-27 continuation
 
 See STATUS.md for live queue state, toolchain checks and the prepared GREEN24 cut. Account-wide one-in-flight and no-cancellation rules remain in force. The candidate is not ready for automatic dispatch; the full carrier-script gate remains blocked.
+
+## 2026-09-27 build-checked waiting candidates
+
+This update supersedes the old carrier build-blocker and empty-backlog notices. GREEN24 2402ebc0 remains validating; ring6 eacbd337 rejected950985831 and is closed. Both frontiers remain f0e453d (pinning995329477, subset691630437). Independent-root/ring4 pinning and isolated-r7-CPU subset candidates now have successful host/native builds, zero-spill native logs, frontier-identical cubins and honest notes over5KiB. Neither was run locally. See STATUS.md for exact patches, hashes, credits and dispatch rules. Another own MLX validation was discovered, so the shared account slot is not free even if pinning finishes first. No submission or cancellation was performed this run.
