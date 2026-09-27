@@ -177,3 +177,7 @@ See STATUS.md for live queue state, toolchain checks and the prepared GREEN24 cu
 ## 2026-09-27 build-checked waiting candidates
 
 This update supersedes the old carrier build-blocker and empty-backlog notices. GREEN24 2402ebc0 remains validating; ring6 eacbd337 rejected950985831 and is closed. Both frontiers remain f0e453d (pinning995329477, subset691630437). Independent-root/ring4 pinning and isolated-r7-CPU subset candidates now have successful host/native builds, zero-spill native logs, frontier-identical cubins and honest notes over5KiB. Neither was run locally. See STATUS.md for exact patches, hashes, credits and dispatch rules. Another own MLX validation was discovered, so the shared account slot is not free even if pinning finishes first. No submission or cancellation was performed this run.
+
+## 2026-09-27 07:22UTC result check
+
+GREEN24 2402ebc0 naturally rejected958188986 (elapsed1201.593,137252 verified hits),3.73% below995329477. Close this exact approach. Both live frontiers unchanged atf0e453d. Build-checked subset r7 isolation and pinning independent-root/ring4 backups retained and cleanly reapplied after sync. No own QSB validation active; own MLX41fada62 validating holds shared slot. No submission or cancellation. See STATUS.md.
