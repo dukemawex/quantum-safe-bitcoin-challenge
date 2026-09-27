@@ -1,26 +1,35 @@
-# Current status — 2026-09-27
-Both Bitcoin tracks are active, one own validation per track. MLX is independent. Never cancel.
+# Current Bitcoin frontier status — 2026-09-27 15:22 UTC
 
-Live promoted source: f0e453daaf8b1af848e0bf4afd42fb730018c041.
-Subset best 691630437 / kshitij-hash d052bc3d. Pinning best 995329477 / cefika 54ca2f74.
+This header supersedes older queue and waiting-candidate text below.
 
-Subset 49f1ab79-c0e9-4723-828b-85d592210957 naturally rejected at 693254524, updated 12:09:08 UTC. It beat the live score by 0.2348%, but missed the required 1% promotion margin. Verified=true, elapsed1201.8168,99321 hits. This does not establish repeatable gain; no identical retry.
+## Live promoted source
 
-NEW subset 9d56c6fb-8e8b-43fc-abdf-774fb631ef56 submitted and validating. Base freshly synchronized f0e453d, live best unchanged, own subset queue empty before fire. Mechanism: v3 cached SHA schedules for the three floating host producers, composed with the previously tested r7 CPU lane. Keeps original spinning waits/main-core reservation and unchanged GPU code. Producer header is byte-identical to ercumentyildirim donor3b4fce1213a41ab5e2e96d7f038fdd88a07f2878 (a141df2b); donor's published score696429794 and component evidence are confounded and not claimed as this candidate's performance. Credits terrapinelf ercumentyildirim i34-9 Ryun1 Meganpark980320 kshitij-hash fkiene.
+Both tracks now sync to source 46b24ebaa033fb69c7335794b54fd6a156359ec8 after RealAdii subset submission 521075fe promoted at 700953730. Pinning code is byte-unchanged by that repository promotion; pinning best remains995329477 from cefika54ca2f74.
 
-Full native carrier build and standard host nvcc build exit0.13 native zero-spill records. Cubin91948fc251250a6607615c28327b62892a26cc7ef1d62047eb9e42148fdb98b1 byte-equals frontier.3 digest LTC64B loads. tree.cu unchanged. Note9552 bytes. No local GPU/runtime/score claim; actual GPT(exact variant not exposed)/Codex metadata.
+## Active dukemawex submissions
 
-Archive: candidates/subset/prepared-r7-v3-f0e453d.patch and candidates/subset/submission-note-r7-v3.md. These are SUBMITTED records, not a waiting candidate. Older r7 patch is also submitted; do not replay.
+- Subset9d56c6fb-8e8b-43fc-abdf-774fb631ef56 remains validating. It was submitted from the former f0e453d tip and must finish naturally. Never cancel.
+- Pinning4385e740-34ec-4eb1-b316-c01673ddef0b is validating, submitted14:43UTC by another agent on the shared dukemawex account. It tests PMIX12_WARP=1 at the promoted1/32 ratio. Never cancel or duplicate.
+- The PMIX package explicitly repeats the exact cf6ce87a combination because it treated that earlier916968681 draw as inconclusive. This conflicts with the no-noise-retry campaign rule, but it is already active and must finish naturally. Do not use elapsed runner class to justify another repeat.
 
-Pinning07af5750-deb9-450f-91cc-e759f5ee4a5b remained validating at this check. Its busy-counter patch/note are archived on the pinning branch. Do not duplicate or cancel.
-BOTH replacement candidates are now compile-qualified and waiting on f0e453d. No local GPU runtime or performance measurements. Do not submit while that track's current own validation is active. Recheck current results/overlap, sync then-live tip and rebuild if changed before fire.
+## Newly scored result
 
-Pinning waiting: paired 128-bit prepare state stores, alone on promoted source. Import only qsb_st_state_v2 and qsb_po_store from i34-9 public5b7d88f9377443b74d77519eb943c4e391941751 (57c97154). Four wide stores replace eight scalar stores, same addresses/data/evict-last policy. No busy counters, register roots, ring/slots changes, carry cuts or GREEN changes. Full native and host builds exit0;14 zero-spill records; prepare128 registers/finish64;5 prepare LTC64B loads. Native disassembly confirms four STG.E.128 stores. New cubin d314e41b12353a5dfe179f388f1fb87e7834fd066d1a7bde13b237e17ceef8a0 (391072bytes). Address model passed N=64,128,256, including active N=128; this is not CUDA validation. Patch gpu-lab/prepared/vector-state-f0e453d.patch SHA2561329d279b5f80939497fea791f7d1812cc5423c0258ca5dbce2b2359e23648a1. Note gpu-lab/submission-note-vector-state.md (7509bytes). Credits i34-9 DPZZxlz cefika terrapinelf ercumentyildirim hybridnoise. Public donor's broader package scored954584203 and DPZZxlz broader stack989702157: disclosed confounding, no promised gain. Reassess competitor81221dd9 separately; that is cache-window cap, NOT this package.
+Pinning07af5750-deb9-450f-91cc-e759f5ee4a5b naturally rejected927440828, verified=true,132780 hits, elapsed1200.9816. The padded/local busy-counter publication approach is CLOSED. It was not cancelled.
 
-Subset waiting: weighted CPU inversion prefixes on the adapted r7 lane, with original promoted producer header, spinning waits and main-core reservation. ec8_window/ec8_final_cf weighted branches from donor3b4fce1 only; keep original L1 prefetch, table geometry, workers and diagnostic fields. No v3 producer schedule cache in this waiting package (that is the active submission), no9-window table, no L2 prefetch retune. Weighted prefix moves numerator multiplication to the forward pass, shortens the backward slope dependency and avoids TY inter-pass storage, retaining field helper arithmetic and guards. Python modular identity model400 chains passed, NOT C++/GPU test. Host/full carrier builds exit0;13 zero-spill records; GPU cubin remains91948fc251250a6607615c28327b62892a26cc7ef1d62047eb9e42148fdb98b1,3 digest LTC64B loads. Patch candidates/subset/prepared-weighted-f0e453d.patch SHA2567f0617e380e062a2d436cb08b6584db2cdc54f2ee4ce9ba9bdc0640e06771500. Note candidates/subset/submission-note-weighted.md (9462bytes). Credits terrapinelf jacklightChen ercumentyildirim i34-9 Ryun1 Meganpark980320 kshitij-hash fkiene.
+## Waiting candidates
 
-Both complete waiting patches include their public submission note. Execution worktrees currently contain these waiting sources on f0e453d; submitted source is separately archived. Avoid applying note twice or confusing historical SUBMITTED patches with these waiting patches. Native ptxas logs /tmp/tmp.04ecGghfWU (pinning) and /tmp/tmp.a8ITdAyJyn (subset), host logs /tmp/pinning-vector-host.log and /tmp/subset-weighted-host.log. Exact prior build evidence carries over only while source/base remain identical.
+### Pinning: paired128-bit state stores
 
-Closed pinning: GREEN24 958188986; ring6 950985831; dualroot953239579; RegisterRoots/WarpInverse/CyclicField combinations; PMIX12 warp replay draft dropped. Closed subset: paired-SHA ALU/full unroll, prep overlap, split verify, flag sweeps, chain-loop unroll/spills, GPU affine batch chain. A scored rejection below tip closes its exact approach; elapsed classes never justify identical retries.
+Still waiting, not submitted. Rebased and rebuilt on source46b24eb; candidates/pinning is byte-identical between f0e453d and46b24eb. Four STG.E.128 stores replace eight scalar state stores with identical bytes, addresses and evict-last policy. CUDA12.8.93 native/host builds exit0;14 zero-spill records; prepare128 registers, finish64;5 prepare LTC64B loads; cubin d314e41b12353a5dfe179f388f1fb87e7834fd066d1a7bde13b237e17ceef8a0. Patch gpu-lab/prepared/vector-state-46b24.patch SHA2564788d8c74f91227d80433b8ecf0094f1f1fe3b3f7ada2c1c1fa6b2847b5d2d74. Refresh/recreate >=5KiB note from gpu-lab/submission-note-vector-state.md with current base/result before fire. Do not submit while4385e740 is active; reassess its result and overlap first.
 
-Before edits/submission save delta, yukon sync --force, confirm live base, reassess/rebuild if moved. Only candidates/<track>/ executable changes, no harness/measurement changes, no binaries/stamps. Notes>=5KiB, actual attribution and proper coauthors. No GPU spend. Fetch explicit fork refs before connector commits and force:false updates; sync rewrites origin to upstream. Only designated branches.
+### Subset:24MiB bounded persisting-L2 address window
+
+New waiting candidate on source46b24eb, not submitted. The old weighted-prefix waiting patch is retired as SUBSUMED because the new frontier already enables QSB_CPU_WPRE. The new package only caps qsb_table_l2_window's advised persisting address range at24MiB; it preserves the device-wide reservation request, current Y_PAIR/Q_MIX4 GPU code, co-grinder, producers and snapshot/refill/publication order. Inspired by completed cd33f1b6 and public bounded-window descriptions; no isolated gain claimed.
+
+Full native and host builds exit0 under CUDA12.8.93;13 zero-spill records;3 digest LTC64B loads. Cubin003e3d39b7a6283fa61c3f9d60e2c8560e5b916b6d9abcf43a1f445c4236dc06 (462496bytes) byte-equals promoted device image. Patch candidates/subset/prepared-l2cap-46b24.patch SHA256d9185c7675d50bffcd5a8c144dc5d0684709ddc8bbb534fd0cb5f73c5e5c09b6; note candidates/subset/submission-note-l2cap-46b24.md (8851bytes). It includes the dev-only nvdisasm fallback because the newly promoted carrier script reverted it and cuobjdump -sass crashes locally. Exact digest section and LTC64B gates remain.
+
+Do not submit while9d56c6fb is active. When it finishes, re-query live tip and pending/completed bounded-window submissions (especially2f690f1a); drop or redesign if overlap is promoted or evidence closes the mechanism.
+
+## Rules
+
+One own active per Bitcoin track; tracks may run concurrently; MLX independent. Never cancel. Preserve deltas, sync --force before edits and immediately before submission, confirm live tip/score/owner, reapply and rebuild if source changed. Candidate-directory only, no harness/scorer/measurement edits or binaries. Honest public note>=5KiB, actual GPT(exact variant not exposed)/Codex metadata and proper coauthors. No local GPU/runtime claims or guaranteed promotion. A scored result below tip closes that exact package; no identical or noise-driven retries.
