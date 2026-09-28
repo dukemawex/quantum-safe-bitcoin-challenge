@@ -1,3 +1,22 @@
+# Current status — 2026-09-28 14:37 UTC
+
+This header supersedes older active/waiting labels. Live source both tracks remains 8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.
+
+Pinning split45 29be6313 naturally REJECTED991168381 at14:18:08UTC, verified=true,141915 hits,elapsed1201.0768. Exact split45-only package CLOSED; no retry.
+NEW pinning e03499b9-f873-4d6d-ab67-63b5f2649159 submitted14:29:34UTC on fresh8d07 after empty own queue; VALIDATING in final query. Isolated PACK2 two-source packing. Native/host builds passed again;15 zero-spill,prepare128/finish64,five LTC64B,476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Archive gpu-lab/prepared/pack2-submitted-e03499b9.patch and gpu-lab/submission-note-pack2-submitted.md are SUBMITTED records, not waiting. Never cancel/duplicate.
+
+Subset93f29ce8-e3b8-4881-88f1-8400270e5a44 KH16 remains VALIDATING. Waiting subset SHA32PAD unchanged: candidates/subset/prepared-sha32pad-8d07.patch and submission-note-sha32pad.md9756B;13 zero-spill host/native, unchanged promoted device image.
+
+NEW WAITING PINNING: QSB_CG_FSEL3=1. Whole-lane CPU IFMA fsel uses native ternary logic immediate0xca with arguments mask,a,b. All current masks from zmask4/negmask4 are whole-lane zero/all-ones; exact byte-blend semantics preserved. Original fmul/fsqr/SHA/packing and policies retained; no active PACK2, closed split45, VL SHA or symmetric square.
+Structural truth table8 cases and10032 four-lane cases with all16 mask combinations passed; not SIMD execution. Exact-source GCC13.3/O3 isolated wrapper old:5 blends+1 compare+1 xor+11 moves; new:5 ternary+14 moves. Total static vector sites18->19,zero stack references both. Extra moves disclosed; fewer selection operations do not prove speed.
+Host/native CUDA12.8.93 pass;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. No local runtime or measured gain.
+Patch gpu-lab/prepared/fsel3-8d07.patch SHA256939bf36fde6aed53db1d7a1e8ea9a7c9e999c6b03c9aef199e03bcc5b519c5c1; note gpu-lab/submission-note-fsel3.md11286B; evidence gpu-lab/prepared/fsel3-evidence.json. Recovery omits carrier/note: sync current live source, apply, copy note, regenerate carrier. Current pinning worktree contains FSEL3 waiting, not submitted PACK2.
+Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent.
+
+One own active per track; tracks concurrent; MLX independent. NEVER CANCEL. Fresh sync/result/overlap review required before dispatch; all blacklists retained, no identical/noise retries. No guaranteed promotion.
+
+---
+
 # Current status — 2026-09-28 13:45 UTC
 
 This header supersedes historical active/waiting labels. Both live sources remain 8d07d3ebad41a017dfaa5906b164f883a9b59348. Subset best708411009/jacklightChen; pinning best1008206828/kaankolcu.
