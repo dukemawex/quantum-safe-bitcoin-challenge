@@ -1,3 +1,15 @@
+# Latest dispatch — 2026-09-28 03:55 UTC
+User explicitly said "Submit them. Let's see the possibility." This supersedes the preceding hold-only evidence gate for the prepared experiments. Evidence-backed compile-qualified hypotheses may be tested on Yukon with honest uncertainty; no guaranteed score.
+
+Fresh sync confirmed source 6343a38d3dde830b079cb95b0e2e99c7f9a812e9 for both tracks.
+Pinning best 995329477/cefika unchanged. Submitted isolated HIGH15_NOFB as 3d812741-55ac-4d00-bf10-8a40ce7ac5f0 at03:55:17UTC; validating, official job queued. Base matches fresh live tip. Host/native builds exit0,12 spill records all zero, prepare128/finish64,five LTC64B,cubin386848B/prefix4026aacbf8a5f416. Coauthors i34-9 ItlaStudent ercumentyildirim cefika DPZZxlz terrapinelf hybridnoise. Note10898B. No cancellation, no GPU runtime or measured gain claims. HIGH15 patch is now SUBMITTED, never replay. Source patch already preserved gpu-lab/prepared/high15-nofb-46b24.patch; same executable pinning base on new tip; full dispatch saved /tmp/qsb-dispatch/pinning-built.patch and pinning-note-final.md.
+
+Subset frontier moved to708411009, promoted5c7e36c5 on6343a38. Own queue empty. Waiting v3 producer candidate is SUBSUMED: new promoted host_producers.h byte-equals donor3b4fce1 already used by our prepared patch. Do not submit a frontier repackage. New frontier also uses Q_MIX2 and a nine-window co-grinder. Read its note before selecting a distinct new subset cut. No new qualified waiting candidate on either track after this dispatch.
+
+All earlier blacklists remain, including own Q_MIX2-only and GLV_NZ-only. One own active per track, never cancel, sync before edit/fire, rebuild on moved base, >=5KiB honest note and actual GPT/Codex attribution. Continue preparation on live tip; never invent measurements.
+
+---
+Historical status:
 # Current evidence gate and results — 2026-09-28 02:17 UTC
 
 This header supersedes historical queue/dispatch instructions below.
