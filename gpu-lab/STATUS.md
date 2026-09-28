@@ -1,3 +1,22 @@
+# Current status — 2026-09-28 19:11 UTC
+
+This header supersedes older active/waiting labels. Live source both tracks remains 8d07d3ebad41a017dfaa5906b164f883a9b59348. Subset best708411009/jacklightChen; pinning best1008206828/kaankolcu.
+
+Subset KH16 93f29ce8 naturally REJECTED702231211 at18:29:37UTC, verified=true,100616 hits,elapsed1201.9235. Exact KH16-only package CLOSED; no retry.
+NEW subset372154a4-3ead-43c7-b6cc-1b43fa6dd4bd submitted19:07:01UTC from fresh8d07 after empty own queue; VALIDATING in final query. Isolated SHA32PAD second-hash scheduling. Native/host passed again;13 zero-spill,three LTC64B;462496B cubin f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc equals promoted. Archive candidates/subset/prepared-sha32pad-submitted-372154a4.patch and submission-note-sha32pad-submitted.md are SUBMITTED records. Never cancel/duplicate.
+
+Pinning70db1d25-2458-4a1b-884a-7ef30113afc1 FSEL3 remains VALIDATING. Waiting pinning CPU SHA32PAD unchanged: gpu-lab/prepared/sha32pad-8d07.patch and submission-note-sha32pad.md11290B;15 zero-spill host/native,unchanged promoted image. This two-stream pinning adaptation is independent of subset's four-message second-SHA specialization.
+
+NEW WAITING SUBSET: QSB_CPU_KEY33PAD=1, exact padding identities only in qsha_keyhash4_h0, the promoted CPU compressed33-byte-key function. Omit zero align/add at group r4 and identity msg1 at r6; original packing, two-pair grouping, all64 rounds/feedforward/h0 extraction retained. No submitted second-SHA32PAD, closedKH16/MRG/X4PS, worker/table/field/GPU changes. Fixed-padding observation shared with terrapinelf lineage; narrow implementation independently adapted to current live loop.
+Structural model2052 messages, both parity prefixes, arbitrary coordinate bytes: generic/specialized grouped64-word schedules matched scalar recurrence and full digest/hashlib. NOT SIMD execution. Actual-source GCC13.3/O3 wrappers: msg1 48->44,alignr52->48,add112->108;msg2 remains48,rnds2 remains128;stack-reference sites4 both. Static code counts, not timing.
+Native/host CUDA12.8.93 exit0,13 zero-spill,three LTC64B;462496B cubin f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc equals promoted. Note9730B; no local runtime/gain/promotion claim.
+Patch candidates/subset/prepared-key33pad-8d07.patch SHA2560032f2431fa298e2e121e25624734d8ff271f45a4ef4ec34c32f62c433d8dc84; note candidates/subset/submission-note-key33pad.md; evidence prepared-key33pad-evidence.json. Recovery omits note/carrier: sync then-live source,apply,copy note,regenerate carrier,refresh manifest hashes. Current subset execution tree holds waiting KEY33PAD, not submitted second-SHA32PAD.
+Credits terrapinelf jacklightChen i34-9 ercumentyildirim HyeokxC RealAdii kshitij-hash fkiene. No donor speed claim; donor broader704265138 confounded. This CPU compressed-key specialization is distinct from closed GPU SHA experiments.
+
+One own active per track; tracks concurrent; MLX independent. NEVER CANCEL. Fresh live-source/result/overlap review and own queue check before fire; rebuild moved source. All prior blacklists retained, no identical/noise retries. No local GPU or target CPU execution claimed.
+
+---
+
 # Current status — 2026-09-28 17:51 UTC
 
 This header supersedes older active/waiting labels. Live source for both tracks remains 8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best 1008206828 / kaankolcu; subset best 708411009 / jacklightChen.
