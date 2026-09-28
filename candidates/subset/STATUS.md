@@ -1,3 +1,22 @@
+# Current status — 2026-09-28 12:41 UTC
+
+This header supersedes historical queue/candidate labels. Both live sources remain 8d07d3ebad41a017dfaa5906b164f883a9b59348. Subset best708411009/jacklightChen; pinning best1008206828/kaankolcu.
+
+Pinning VL SHA e130e912 naturally REJECTED981787755 at11:56:43UTC, verified=true,140572 hits,elapsed1201.0777. Exact VL SHA-only package CLOSED; no retry.
+NEW pinning29be6313-9540-474a-bd9e-91a7ebce2708 submitted12:38:13UTC from fresh8d07 after empty own queue; VALIDATING in final refreshed query. Isolated QSB_CG_SPLIT45 field-column scheduling. Host/native builds passed again;15 zero-spill,prepare128/finish64,five LTC64B,476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Archive gpu-lab/prepared/split45-submitted-29be6313.patch and gpu-lab/submission-note-split45-submitted.md are SUBMITTED records. Never cancel/duplicate.
+
+Subset9ae6f186-00d1-4004-88f3-6331eb838c98 X4PS remains VALIDATING. Waiting KH16 remains unchanged on8d07: candidates/subset/prepared-kh16-8d07.patch and submission-note-kh16.md10155B; native/host passed13 zero-spill,unchanged device image.
+
+NEW WAITING PINNING: QSB_CG_PACK2=1, direct two-source dword selection only in IFMA hash_block packing. It replaces eighteen one-source permutations and nine blends with nine two-source permutations; original fmul/fsqr/SHA and all promoted policies retained. No active split45 or closed VL SHA/square. Existing IFMA F/VL runtime gate covers the instruction. Plus/minus lane ordering preserved before either SHA-NI or vector hash path.
+Lane model10018 input pairs x2 mappings passed; includes all16 lane basis positions. Isolated actual-source compiled wrappers:18 vpermd+9 vpblendd ->2 vpermi2d+7 vpermt2d; vmovdqa13->21,vmovdqu64 remains8; total static vector sites50->40,stack-reference sites14 in both. These are static counts, not runtime/performance.
+Native/host CUDA12.8.93 builds pass;15 zero-spill,prepare128/finish64,five LTC64B,476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Note9753B.
+Patch gpu-lab/prepared/pack2-8d07.patch SHA256531e5ce7b490debbf6d59cdcde28c669697cae2401ab20a6a2c32b1cf087f22e; note gpu-lab/submission-note-pack2.md; evidence gpu-lab/prepared/pack2-evidence.json. Recovery omits carrier/note: apply to then-live sync, copy note and regenerate. Current pinning worktree contains PACK2 waiting, not submitted split45.
+Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent. No measured gain or promised promotion.
+
+One active per track, tracks concurrent, MLX independent. NEVER CANCEL. Fresh sync/queue/overlap review required before any dispatch; preserve blacklists. No GPU runtime or target CPU execution claimed.
+
+---
+
 # Current status — 2026-09-28 10:08 UTC
 
 This header supersedes historical active/waiting labels below. Both tracks remain on live source 8d07d3ebad41a017dfaa5906b164f883a9b59348. Subset best708411009/jacklightChen; pinning best1008206828/kaankolcu.
