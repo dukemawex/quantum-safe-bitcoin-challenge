@@ -1,3 +1,20 @@
+# Current Bitcoin frontier status — 2026-09-28 05:19 UTC check
+
+This header supersedes historical candidate and queue labels below.
+
+Live source for both tracks: 8d07d3ebad41a017dfaa5906b164f883a9b59348.
+Subset best 708411009 / jacklightChen 5c7e36c5. Pinning best 1008206828 / kaankolcu b9736ce1.
+Own subset d1cb6d56-457b-4ee8-9f48-2b4af9b11bcc (MRG) and pinning 3d812741-55ac-4d00-bf10-8a40ce7ac5f0 (HIGH15) remain validating in refreshed queries. Both were submitted from former tip6343a38 and must finish naturally. No submission or cancellation this check.
+
+Waiting subset: X4PS shared immutable SHA-schedule loads, rebased to8d07. Native/host builds exit0,13 zero-spill records,3 digest LTC64B, cubin462496B SHA256 f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc equals promoted. Patch candidates/subset/prepared-x4ps-8d07.patch; note candidates/subset/submission-note-x4ps-8d07.md. No active MRG or other knobs in this waiting package.
+
+Old waiting pinning W8 is SUBSUMED: new promoted code already enables QSB_FIN_W8S0. Never submit that archive.
+New waiting pinning: symmetric IFMA CPU square in cpu_cogrind3_ifma.h, QSB_CG_IFMA_SQR=1, inheriting all promoted GPU/host policy unchanged. Ten off-diagonal products are computed once and doubled, plus five diagonal products; unchanged reduction. Structural model 20002 cases passed; isolated compiled wrappers show62 versus42 IFMA instructions including reduction, no stack references. Neither is a runtime speed measurement. Native/host builds exit0;15 zero-spill records;prepare128/finish64;5 prepare LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 exactly promoted. Patch gpu-lab/prepared/ifma-square-8d07.patch SHA2564a420022c9a17ff70602da2e3ae85093d6cf8762fc1951c3cf642f5922545544; note gpu-lab/submission-note-ifma-square.md9804B. Attribution terrapinelf symmetric-square lineage, kaankolcu current base and cited co-grinder lineage. No GPU/CPU runtime or measured aggregate gain claimed.
+
+Both recovery patches omit generated carrier and note. Apply to freshly synchronized live source, copy corresponding note, regenerate carrier, assess current results and overlap before dispatch. Current execution worktrees contain waiting candidates. Do not duplicate active submissions. One active per track; never cancel; MLX independent. Compile-qualified evidence-backed hypotheses are authorized but promotion is uncertain. No identical/noise retries or blacklisted combinations. Inherited promoted register-root code does not reopen that investigation.
+
+---
+
 # Bitcoin frontier loop — 2026-09-28 04:03 UTC
 
 Latest user authorization: "Submit them. Let's see the possibility." Evidence-backed compile-qualified hypotheses may be tested on Yukon. No measured local gain is required and no promotion is guaranteed. One own active per Bitcoin track; tracks concurrent; MLX independent. NEVER CANCEL.
