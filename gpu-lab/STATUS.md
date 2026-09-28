@@ -1,3 +1,22 @@
+# Current status — 2026-09-28 17:51 UTC
+
+This header supersedes older active/waiting labels. Live source for both tracks remains 8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best 1008206828 / kaankolcu; subset best 708411009 / jacklightChen.
+
+Pinning PACK2 e03499b9 naturally REJECTED 987866809 at 16:39:52 UTC, verified=true, 141440 hits, elapsed1201.0574. Exact PACK2-only package CLOSED; no retry.
+NEW pinning 70db1d25-2458-4a1b-884a-7ef30113afc1 submitted 17:46:56 UTC from fresh8d07 after empty own queue; VALIDATING in final query. Isolated FSEL3 whole-lane ternary selection. Native/host builds passed again; 15 zero-spill, prepare128/finish64, five LTC64B; 476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Archive gpu-lab/prepared/fsel3-submitted-70db1d25.patch and gpu-lab/submission-note-fsel3-submitted.md are SUBMITTED records. Never cancel/duplicate.
+
+Subset 93f29ce8-e3b8-4881-88f1-8400270e5a44 KH16 remains VALIDATING. Waiting subset SHA32PAD unchanged: candidates/subset/prepared-sha32pad-8d07.patch and submission-note-sha32pad.md9756B; 13 zero-spill host/native, unchanged promoted image.
+
+NEW WAITING PINNING: QSB_CG_SHA32PAD=1, fixed32-byte second-SHA in CPU z_shani_2 only. cg_sha.h generic body becomes compile-time shani_compress2_impl<PAD32>; false wrapper preserves generic callers, true wrapper fixes W8/W15 and removes zero align/add plus identity msg1 at group3. Only DA/DB second-hash call changes. Full64 rounds/all8 words/feedforward preserved; original first tail hash, keyhash, field arithmetic/selection/packing, GPU and controller retained. No submitted FSEL3 or closed PACK2/split45/VL SHA/square.
+Structural model1026 messages compared generic/specialized grouped64-word schedules to scalar recurrence and full digest to hashlib; NOT SHA-NI execution. Actual-header GCC13.3/O3 wrappers: msg1 23->22, msg2 24->24, rnds2 64->64, palignr27->26, paddd56->54, movdqa117->116; stack references14 both. Compiler already shares some padding work, so small static difference only, not timing. Generic compiled wrapper body identical after label normalization.
+Native/host CUDA12.8.93 exit0;15 zero-spill, prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Note11290B; no local runtime/gain/promotion claim. Could be inert at runtime if controller uses another hashing mode.
+Patch gpu-lab/prepared/sha32pad-8d07.patch SHA2568c569e1c1fbbd4620cb5593dac8506cd2e731acde1bfeb84e13eed4144ed2cd1; note gpu-lab/submission-note-sha32pad.md; evidence gpu-lab/prepared/sha32pad-evidence.json. Recovery omits note/carrier: sync live, apply, copy note, regenerate carrier. Current pinning execution tree holds waiting SHA32PAD, not submitted FSEL3.
+Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent. Independent pinning adaptation from live code; fixed-padding observation shared with subset/terrapinelf lineage, no donor speed claim. This CPU two-stream change is distinct from closed GPU SHA experiments.
+
+One own active per track; tracks concurrent; MLX independent. NEVER CANCEL. Assess live tip/result/overlap and fresh queue before fire, rebuild moved base. All prior blacklists retained; no identical/noise retries.
+
+---
+
 # Current status — 2026-09-28 14:35 UTC
 
 This header supersedes older active/waiting labels. Live source both tracks remains 8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.
