@@ -1,3 +1,21 @@
+# Current status — 2026-09-28 07:19 UTC
+
+This header supersedes historical active/waiting labels below.
+Live source both tracks: 8d07d3ebad41a017dfaa5906b164f883a9b59348. Subset best708411009/jacklightChen5c7e36c5; pinning best1008206828/kaankolcu b9736ce1.
+
+Pinning HIGH15-only3d812741 naturally rejected922059642 at06:13:20UTC. Exact isolated package CLOSED; no replay. The live promoted source contains inherited HIGH15 components; this does not reopen that experiment.
+Pinning489fa7b9-6ce4-4e0a-88d5-f0902a350ed5 submitted07:14:56UTC on fresh live8d07 after empty own queue and remains VALIDATING. This is the symmetric IFMA CPU square. Host/native builds passed again;15 zero-spill records;prepare128/finish64;5 LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Public note10307B, actual GPT/Codex metadata and coauthors. Archive gpu-lab/prepared/ifma-square-submitted-489fa7b9.patch and gpu-lab/submission-note-ifma-square-submitted.md. This is SUBMITTED, not waiting.
+Subset d1cb6d56-457b-4ee8-9f48-2b4af9b11bcc (MRG) remains VALIDATING. Never cancel or duplicate either active package.
+
+WAITING SUBSET: X4PS on8d07 unchanged; patch candidates/subset/prepared-x4ps-8d07.patch and note candidates/subset/submission-note-x4ps-8d07.md. Builds already passed13 zero-spill/native+host; carrier f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc equals promoted. No MRG in waiting source.
+
+NEW WAITING PINNING: QSB_CG_VL_SHA=1, explicit 256-bit native rotates for four SHA sigma helpers only in IFMA EC vector-hash branch. Original promoted fsqr/fmul retained; no submitted square. Copied compression schedule/round body text matches original after helper/macro/target substitutions. Existing IFMA dispatch already requires F/VL; SHA-NI and AVX2-only paths unchanged. Integer model20034 words x4 functions passed. Compiled wrapper comparison:1411->948 static vector instruction sites,544->32 shift sites,0->256 rotate sites,80->60 stack references. These are static code sites, NOT executed instructions or timings.
+Host/native CUDA12.8.93 builds exit0;15 zero-spill records;prepare128/finish64;5 LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Patch gpu-lab/prepared/vlsha-8d07.patch SHA2564f9a5e50b82773fc5133f561363cad2d8734c4a007a93081067ef954b7ad273d; note gpu-lab/submission-note-vlsha.md9081B. No local CPU/GPU runtime or measured gain. May have no benefit when controller selects SHA-NI. Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent. Recovery patch omits note/carrier; copy note and regenerate carrier. Current pinning worktree contains waiting VL SHA, not submitted square.
+
+One own active per track; concurrent tracks and MLX independence. Never cancel. Sync/reassess then-live source, result and overlap before dispatch. No guaranteed promotion. Preserve all prior blacklists and no noise retries. W8, weighted-prefix and v3 producer waiting archives remain subsumed.
+
+---
+
 # Current Bitcoin frontier status — 2026-09-28 05:19 UTC check
 
 This header supersedes historical candidate and queue labels below.
