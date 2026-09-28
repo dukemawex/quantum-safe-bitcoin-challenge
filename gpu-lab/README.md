@@ -1,3 +1,21 @@
+# Current status — 2026-09-28 20:04 UTC
+
+This header supersedes older active/waiting labels. Live source both tracks remains8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.
+
+Pinning FSEL3 70db1d25 naturally REJECTED989496512 at19:26:54UTC,verified=true,141670 hits,elapsed1201.0291. Exact FSEL3-only package CLOSED; no retry.
+NEW pinning246a0544-b94c-482f-8b80-2605485d86c1 submitted20:00:48UTC from fresh8d07 after empty own queue; VALIDATING in final refreshed query. Isolated CPU SHA32PAD second-hash specialization in z_shani_2. Native/host passed again;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Archive gpu-lab/prepared/sha32pad-submitted-246a0544.patch and gpu-lab/submission-note-sha32pad-submitted.md are SUBMITTED, not waiting. Never cancel/duplicate.
+
+Subset372154a4-3ead-43c7-b6cc-1b43fa6dd4bd SHA32PAD remains VALIDATING. Waiting subset KEY33PAD unchanged: candidates/subset/prepared-key33pad-8d07.patch and submission-note-key33pad.md9730B;13 zero-spill native/host,unchanged promoted device image. SHA2560032f2431fa298e2e121e25624734d8ff271f45a4ef4ec34c32f62c433d8dc84. No KH16 or submitted second-SHA32PAD in waiting source.
+
+NEW WAITING PINNING: QSB_CG_KEY33PAD=1, exact compressed33-byte-key padding only in pub_hash8_shani_wm. cg_sha.h template shani_compress2_impl<PAD33> preserves generic false wrapper; true loads W8 unchanged,fixes W9..14=0,W15=264,omits zero align/add and identity msg1 at group3. Word-major key-hash call only, used by existing IFMA/AVX2 EC SHA-NI paths; row-major generic path unchanged. No submitted second-SHA32PAD,FSEL3,PACK2,split45,VLSHA,square,GPU/controller changes. cpu_cogrind3.h original promoted.
+Structural model2052 messages with both parity prefixes: actual grouped macro ordering generic/specialized64-word schedules matched recurrence and full scalar digest/hashlib; NOT SIMD execution. Actual function/header GCC13.3/O3 sites:msg1 24->22,palignr25->23,paddd58->56,movdqa113->109;msg2 remains24,rnds2 remains64;stack-reference sites13->3. Generic wrapper body identical after label normalization. Static code checks, not runtime/timing.
+Native/host CUDA12.8.93 exit0,15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Note9563B; no measured gain/promotion claim. Can be immaterial when controller chooses another mode.
+Patch gpu-lab/prepared/key33pad-8d07.patch SHA25644334c8fa91dfcbd64dcf3439b90988d3bfafae72470a90bb3d2d64b2d27111a; note gpu-lab/submission-note-key33pad.md; evidence gpu-lab/prepared/key33pad-evidence.json. Recovery omits carrier/note: sync live,apply,copy note,regenerate carrier. Current pinning execution tree holds waiting KEY33PAD, not submitted second-SHA32PAD. Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent. Independent adaptation of live pinning code; fixed-padding observation shared with terrapinelf/subset lineage, no donor speed claim.
+
+One own active per track; tracks concurrent; MLX independent. NEVER CANCEL. Reassess live tip,result,overlap/blacklists and fresh own queue before fire; rebuild moved base. No identical/noise retries,local GPU or target CPU execution claim.
+
+---
+
 # Current status — 2026-09-27
 Both Bitcoin tracks are active, one own validation per track. MLX is independent. Never cancel.
 
