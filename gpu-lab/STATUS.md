@@ -1,30 +1,18 @@
-# Pinning campaign status — 2026-09-27 23:25 UTC
+# QSB pinning loop status — 2026-09-28 UTC
 
-## Live frontier
-- Source: `46b24ebaa033fb69c7335794b54fd6a156359ec8`
-- Best: 995,329,477 by cefika, submission `54ca2f74`.
-
-## Active dukemawex submission
-- `e71b1fcd-1c9e-4430-a02a-7205ab817bfb`: isolated `QSB_T5V_SC=1`, submitted from a freshly synchronized live source. It short-carries only the final two top5 cofactor-tree products. Never cancel or duplicate.
-- Build at dispatch: host/native exit0, 14 zero-spill records, prepare128/finish64 registers, five prepare LTC64B loads, cubin b1cfbb1dfb36f5a2d89e8d39b7aefed13d80bbaf597743ab282207b5a2fab0a9 (389,024B).
-- Archive patch: `gpu-lab/prepared/t5v-sc-submitted-e71b1fcd.patch`. It omits generated carrier; rebuild after apply.
-
-## Latest closed result
-- `1a89f12a-758b-474e-b7d5-5b0959cafc77`: isolated exact SAS2 second-fold carry scheduling, rejected 965,644,964; verified=true, elapsed1201.5322. Exact package closed.
-
-## Waiting candidate
-- Isolated `QSB_GLV_NZ_CUT=1`: after unchanged decode of both GLV halves, return ordinary nonzero mask3 and remove exact-zero-half tests.
-- Donor mechanism: i34-9 f7470c17 / 8156aa0b, with public composition evidence from ercumentyildirim. This package excludes donor carry cuts, HIGH15 fallback removal, slots, stores, roots, CPU policy and active T5V.
-- Native CUDA12.8.93 carrier build passes: 14 ptxas records, zero spill stores/loads, prepare128/finish64 registers, five prepare LTC64B loads.
-- Cubin 2fc75fc005d592aa4fd9dd7b305e8d4005cf8f8eb32631b0c09984a9837d3f4f,390,176B.
-- Standard host nvcc build passes.
-- No local GPU runtime or score. Yukon is the first runtime measurement.
-- Patch: `gpu-lab/prepared/glv-nz-46b24.patch`
-- Note: `gpu-lab/submission-note-glv-nz.md`
-- Recovery patch omits generated carrier; rebuild after apply.
-
-## Abandoned
-ADDOFF and deferred-Qy shortened subtraction caused4-byte spill stores/loads in hot prepare. Chain-P shortened subtraction compiled to the exact frontier cubin and was inert.
-
-## Closed
-SAS2-only, paired128 stores, QSB_SLOTS3, PMIX per-warp, busy counters, GREEN24, ring6, dualroot, and RegisterRoots/WarpInverse/CyclicField compositions. Never redraw scored-below-board packages from elapsed-time class.
+- Live promoted source: `46b24ebaa033fb69c7335794b54fd6a156359ec8`.
+- Live pinning best: 995,329,477, cefika submission `54ca2f74`.
+- Active dukemawex submission: `c3d03812-16b0-4863-b198-59f56573039c`, validating. Submitted from a fresh `46b24eb` sync after an empty own queue check.
+- Active mechanism: isolated `QSB_GLV_NZ_CUT=1`; ordinary nonzero mask 3 after unchanged GLV decode. Never cancel or duplicate.
+- Active build: host/native exit 0; 14 zero-spill records; prepare 128 registers, finish 64; five prepare LTC64B loads; cubin SHA-256 `2fc75fc005d592aa4fd9dd7b305e8d4005cf8f8eb32631b0c09984a9837d3f4f`, 390,176 bytes.
+- Submitted recovery artifact already on this branch: `gpu-lab/prepared/glv-nz-46b24.patch`; note `gpu-lab/submission-note-glv-nz.md`. It is now a submitted record, not waiting work.
+- Newly closed: T5V-only `e71b1fcd` naturally rejected at 923,684,990, verified=true, 132,243 hits, elapsed 1,200.9881 seconds. Do not retry.
+- Waiting candidate: isolated `QSB_HIGH15_NOFB=1`, rebuilt directly on promoted `46b24eb`, with the original GLV zero-half tests and all promoted pipeline/carry/cofactor/host policies retained.
+- Waiting mechanism: remove the rare full-reference fallback from `q9_coeff_high15`; use the already-computed high diagonals unconditionally. Donor lineage i34-9 `f7470c17` / public submission `8156aa0b`; no isolated performance claim.
+- Waiting qualification: CUDA 12.8.93 native and host builds exit 0; 12 ptxas function-property records all zero-spill; prepare 128 registers, finish 64; five prepare LTC64B loads; cubin SHA-256 prefix `4026aacbf8a5f416`, 386,848 bytes. No local GPU/runtime/score claim.
+- Waiting recovery patch: `gpu-lab/prepared/high15-nofb-46b24.patch` (generated carrier intentionally omitted; rebuild after apply).
+- Waiting note: `gpu-lab/submission-note-high15-nofb.md`.
+- Closed exact approaches: T5V-only, SAS2-only, paired 128-bit stores, QSB_SLOTS=3, PMIX per-warp, padded busy counters, GREEN24, ring6, dual roots, and RegisterRoots/WarpInverse/CyclicField compositions.
+- Abandoned preparation: ADDOFF and deferred-Qy shortened subtraction spilled in the hot prepare kernel; chain-P cut was cubin-inert.
+- One own active submission per Bitcoin track. Subset is independent. Never cancel.
+- Before submission: preserve delta, `yukon sync --force`, confirm live tip/score/owner, reapply/rebuild if moved, fresh own-queue check, then submit only if still qualified.
