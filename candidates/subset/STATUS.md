@@ -1,3 +1,19 @@
+# Current status — 2026-09-28 08:15 UTC
+
+This header supersedes older active/waiting labels. Source both tracks8d07d3ebad41a017dfaa5906b164f883a9b59348; subset best708411009/jacklightChen; pinning best1008206828/kaankolcu.
+
+Subset MRG d1cb6d56 naturally REJECTED703871269 at07:26:47UTC. Exact MRG-only package CLOSED. No noise retry.
+New subset9ae6f186-00d1-4004-88f3-6331eb838c98 submitted08:10:02UTC from fresh8d07 after empty own queue, status VALIDATING. Isolated X4PS shared immutable schedule loads. Host/native builds exit0 again,13 zero-spill records,3 LTC64B,cubin f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc unchanged. Actual GPT/Codex attribution and coauthors. Archive candidates/subset/prepared-x4ps-submitted-9ae6f186.patch and submission-note-x4ps-submitted.md are SUBMITTED, not waiting.
+Pinning489fa7b9-6ce4-4e0a-88d5-f0902a350ed5 (symmetric IFMA square) remains VALIDATING. Never cancel/duplicate either active.
+
+WAITING SUBSET: isolated QSB_CPU_KH16 from terrapinelf a33e04c3/source87d9ebfd20a635536b69fa24dbcc60b1a6dce7e3. Sixteen compressed-key messages use AVX512 schedule expansion and four SHA-NI chains; guards preserve fallback, bad masks and exact host gate. Includes only required KH16 functions, buffers/context/call sites; no MRG/X4PS/SHC/worker/table/prefetch/GPU changes. Donor reports+1.17% CPU-only; not our timing and not aggregate prediction; complete donor official704265138 is confounded. Model3232 messages passed serialization, recurrence, round-pair addressing and scalar digest vs hashlib, NOT SIMD execution. Native/host CUDA12.8.93 exit0,13 zero-spill,3 digest LTC64B,462496B cubin f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc equals promoted. Patch candidates/subset/prepared-kh16-8d07.patch SHA256bf8f1a0deee72644d5e993a47ea0801dd6742ded0c0880dd79aa3466da89dd2a; note candidates/subset/submission-note-kh16.md10155B. Recovery patch omits note/carrier; copy note and regenerate carrier. Source manifest updated. Credits terrapinelf jacklightChen i34-9 ercumentyildirim HyeokxC RealAdii kshitij-hash fkiene. Current subset execution tree holds waiting KH16, not submitted X4PS.
+
+WAITING PINNING unchanged: QSB_CG_VL_SHA=1 explicit256-bit rotates only in IFMA vector-hash branch, original promoted fsqr retained. Patch gpu-lab/prepared/vlsha-8d07.patch; note gpu-lab/submission-note-vlsha.md. Builds passed15 zero-spill,5 LTC64B,476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. No local runtime score.
+
+One own active per track; Bitcoin tracks concurrent; MLX independent. Never cancel. Before dispatch sync then-live source and assess result/overlap. No promised promotion. All prior blacklists remain. Preserve live inherited components without reopening old experiments.
+
+---
+
 # Current status — 2026-09-28 07:19 UTC
 
 This header supersedes historical active/waiting labels below.
