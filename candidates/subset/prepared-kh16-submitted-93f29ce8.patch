@@ -1,0 +1,399 @@
+diff --git a/candidates/subset/CpuGrindSubset.h b/candidates/subset/CpuGrindSubset.h
+index f7816eb..01205d3 100644
+--- a/candidates/subset/CpuGrindSubset.h
++++ b/candidates/subset/CpuGrindSubset.h
+@@ -113,6 +113,10 @@
+ #ifndef QSB_CPU_PSEED
+ #define QSB_CPU_PSEED 1            /* fused subtractions: the 4p offset rides in the product columns' initial values */
+ #endif
++/* terrapinelf a33e04c3: isolate 16-key schedule/packing, preserve promoted field arithmetic. */
++#ifndef QSB_CPU_KH16
++#define QSB_CPU_KH16 1
++#endif
+ #ifndef QSB_CPU_BATCH
+ #define QSB_CPU_BATCH 1024         /* candidates per batch: both SMT threads' EC state (2 x 0.25 MB) and prefetched rows stay in the 1 MB L2 */
+ #endif
+@@ -1237,6 +1241,67 @@ Q8T static void ec8_final_cf(const fe8 *X, const fe8 *Y, fe8 *D, fe8 *PRE, int G
+         }
+     }
+ }
++#if QSB_CPU_KH16 && QCPU_SHANI
++/* ---- QSB_CPU_KH16: key hashes from a 16-lane message schedule ----
++ * The 16 keys of a group (8 candidates x 2 recids; lane j = candidate j recid 0, lane 8 + j = recid 1) are hashed together:
++ * ec8_final_cf_kh writes their message words W0..W8 (the 33-byte compressed key 02|03 || x, then 0x80) straight from the canonical
++ * limbs in registers, kh16_h0 expands W16..W63 for all 16 keys with AVX-512 (W9..W14 = 0, W15 = 264), stores W + K pairwise
++ * interleaved (unpack of rounds 2p, 2p + 1) and runs the rounds with SHA-NI four keys at a time from those pairs (no sha256msg1/2,
++ * four independent sha256rnds2 chains). Same messages, same rounds, same h0 as qsha_keyhash4_h0. */
++Q8T static inline __attribute__((always_inline)) void kh16_canon(__m512i w[4], const fe8 &a) {   /* canonical 4 x 64-bit limbs of 8 lanes */
++    fe8 u; const __mmask8 ge = fe8_ge_p(a, &u);
++    __m512i r[5];
++    for (int i = 0; i < 5; i++) r[i] = _mm512_mask_blend_epi64(ge, a.l[i], u.l[i]);
++    w[0] = _mm512_or_si512(r[0], _mm512_slli_epi64(r[1], 52));
++    w[1] = _mm512_or_si512(_mm512_srli_epi64(r[1], 12), _mm512_slli_epi64(r[2], 40));
++    w[2] = _mm512_or_si512(_mm512_srli_epi64(r[2], 24), _mm512_slli_epi64(r[3], 28));
++    w[3] = _mm512_or_si512(_mm512_srli_epi64(r[3], 36), _mm512_slli_epi64(r[4], 16));
++}
++/* message words W0..W8 of one recid's 8 keys as 64-bit lanes (low 32 bits = the word): x = w3 w2 w1 w0, W0 = pfx << 24 | x >> 232,
++ * W_i = (x >> (232 - 32 i)) & 0xffffffff (i = 1..7), W8 = (x & 0xff) << 24 | 0x800000; pfx = 2 | parity of y */
++Q8T static inline __attribute__((always_inline)) void kh16_words8(__m512i W[9], const __m512i w[4], __mmask8 par) {
++    W[0] = _mm512_mask_or_epi64(_mm512_or_si512(_mm512_srli_epi64(w[3], 40), _mm512_set1_epi64(0x02000000)), par,
++                                _mm512_or_si512(_mm512_srli_epi64(w[3], 40), _mm512_set1_epi64(0x02000000)), _mm512_set1_epi64(0x01000000));
++    W[1] = _mm512_srli_epi64(w[3], 8);
++    W[2] = _mm512_or_si512(_mm512_slli_epi64(w[3], 24), _mm512_srli_epi64(w[2], 40));
++    W[3] = _mm512_srli_epi64(w[2], 8);
++    W[4] = _mm512_or_si512(_mm512_slli_epi64(w[2], 24), _mm512_srli_epi64(w[1], 40));
++    W[5] = _mm512_srli_epi64(w[1], 8);
++    W[6] = _mm512_or_si512(_mm512_slli_epi64(w[1], 24), _mm512_srli_epi64(w[0], 40));
++    W[7] = _mm512_srli_epi64(w[0], 8);
++    W[8] = _mm512_or_si512(_mm512_slli_epi64(w[0], 24), _mm512_set1_epi64(0x00800000));
++}
++/* m[0..8] (16 dwords each): recid 0's keys in lanes 0..7, recid 1's in lanes 8..15 */
++Q8T static inline __attribute__((always_inline)) void kh16_store(uint32_t *m, const fe8 &x0, __mmask8 p0, const fe8 &x1, __mmask8 p1) {
++    __m512i w[4], W0[9], W1[9];
++    kh16_canon(w, x0); kh16_words8(W0, w, p0);
++    kh16_canon(w, x1); kh16_words8(W1, w, p1);
++    for (int i = 0; i < 9; i++)
++        _mm512_store_si512((void *)(m + 16 * i), _mm512_inserti64x4(_mm512_castsi256_si512(_mm512_cvtepi64_epi32(W0[i])), _mm512_cvtepi64_epi32(W1[i]), 1));
++}
++/* ec8_final_cf with the key-hash message words as output (m16: 9 x 16 dwords per group) instead of qx/qp */
++Q8T static void ec8_final_cf_kh(const fe8 *X, const fe8 *Y, fe8 *D, fe8 *PRE, int G, const fe &mx, const fe &my, uint32_t *m16) {
++    fe8 MX, MY; fe8_bcast(MX, mx); fe8_bcast(MY, my);
++    fe8 run[4]; for (int c = 0; c < 4; c++) fe8_set1(run[c]);
++    for (int g = 0; g < G; g += 4)
++        for (int c = 0; c < 4; c++) {
++            const int h = g + c; fe8_sub_lz(D[h], MX, X[h]);
++            { fe8 t; fe8_sub_lz(t, MY, Y[h]); fe8_mul_lz(PRE[h], run[c], t); }   /* weighted prefix, as in ec8_window */
++            fe8_mul_lz(run[c], run[c], D[h]);
++        }
++    fe8_inv4(run);
++    for (int g = G - 4; g >= 0; g -= 4) {
++        for (int c = 3; c >= 0; c--) {
++            const int h = g + c;
++            fe8 t, lam, x3, y3;
++            fe8_mul_lz(lam, run[c], PRE[h]); fe8_mul_lz(run[c], run[c], D[h]);
++            fe8_sqr_sub2(x3, lam, X[h], MX);
++            fe8_sub_lz(t, X[h], x3); fe8_mul_sub(y3, lam, t, Y[h]);
++            kh16_store(m16 + (size_t)h * 144, X[h], fe8_parity(Y[h]), x3, fe8_parity(y3));
++        }
++    }
++}
++#endif
+ /* Window 0: acc = sign * T0[|d0| - 1] (digit-0 lanes load row 0 and are dropped by the caller); computes
+  * and prefetches window 1's rows (nxt) into rpn/ngn. */
+ template <class RowFn>
+@@ -1554,6 +1619,68 @@ QSHA static __m128i qsha_keyhash4_h0(const fe *qx, const uint8_t *qp) {
+     }
+     return _mm_unpackhi_epi64(_mm_unpackhi_epi32(a[0], a[1]), _mm_unpackhi_epi32(a[2], a[3]));
+ }
++#if QSB_CPU_KH16 && QCPU_VEC
++#define QSHA16 __attribute__((target("sha,sse4.1,ssse3,avx,avx2,avx512f,avx512vl")))
++/* h0 of SHA-256 of the 16 keys whose message words W0..W8 are m[0..8] (lane = key); wk: 32 x 32 dwords of scratch.
++ * Returns the 16 h0 values (lane = key). */
++QSHA16 static unsigned kh16_pass(const uint32_t *m, uint32_t *wk) {
++#define R16(x, n) _mm512_ror_epi32((x), (n))
++#define S0_16(x) _mm512_ternarylogic_epi32(R16(x, 7), R16(x, 18), _mm512_srli_epi32(x, 3), 0x96)
++#define S1_16(x) _mm512_ternarylogic_epi32(R16(x, 17), R16(x, 19), _mm512_srli_epi32(x, 10), 0x96)
++    __m512i W[16];
++#pragma GCC unroll 9
++    for (int i = 0; i < 9; i++) W[i] = _mm512_load_si512((const void *)(m + 16 * i));
++    for (int i = 9; i < 15; i++) W[i] = _mm512_setzero_si512();
++    W[15] = _mm512_set1_epi32(264);
++    __m512i prev = _mm512_setzero_si512();
++#pragma GCC unroll 64
++    for (int t = 0; t < 64; t++) {
++        __m512i wt;
++        if (t < 16) wt = W[t];
++        else {
++            /* W[t] = s1(W[t-2]) + W[t-7] + s0(W[t-15]) + W[t-16]; the zero words W9..W14 drop out at compile time */
++            const int a2 = (t - 2) & 15, a7 = (t - 7) & 15, a15 = (t - 15) & 15, a16 = t & 15;
++            const bool z2 = (t - 2) >= 9 && (t - 2) <= 14, z7 = (t - 7) >= 9 && (t - 7) <= 14, z15 = (t - 15) >= 9 && (t - 15) <= 14,
++                       z16 = (t - 16) >= 9 && (t - 16) <= 14;
++            wt = z16 ? _mm512_setzero_si512() : W[a16];
++            if (!z15) wt = _mm512_add_epi32(wt, S0_16(W[a15]));
++            if (!z7) wt = _mm512_add_epi32(wt, W[a7]);
++            if (!z2) wt = _mm512_add_epi32(wt, S1_16(W[a2]));
++            W[a16] = wt;
++        }
++        const __m512i wkt = _mm512_add_epi32(wt, _mm512_set1_epi32((int)qsha_k[t]));
++        if (t & 1) {                                     /* rounds t - 1, t as dword pairs, key-major within 128-bit lanes */
++            _mm512_store_si512((void *)(wk + 32 * (t >> 1)), _mm512_unpacklo_epi32(prev, wkt));
++            _mm512_store_si512((void *)(wk + 32 * (t >> 1) + 16), _mm512_unpackhi_epi32(prev, wkt));
++        } else prev = wkt;
++    }
++#undef S0_16
++#undef S1_16
++#undef R16
++    /* key 4L + e: pair p at wk + 32 p + (e >= 2 ? 16 : 0) + 4 L + 2 (e & 1) */
++    const __m128i IV0 = _mm_set_epi32((int)0x6a09e667, (int)0xbb67ae85, (int)0x510e527f, (int)0x9b05688c);
++    const __m128i IV1 = _mm_set_epi32((int)0x3c6ef372, (int)0xa54ff53a, (int)0x1f83d9ab, (int)0x5be0cd19);
++    alignas(64) uint32_t h0[16];
++#pragma GCC unroll 1
++    for (int L = 0; L < 4; L++) {
++        __m128i S0[4], S1[4];
++        const uint32_t *base[4] = {wk + 4 * L, wk + 4 * L + 2, wk + 16 + 4 * L, wk + 16 + 4 * L + 2};
++#pragma GCC unroll 4
++        for (int e = 0; e < 4; e++) { S0[e] = IV0; S1[e] = IV1; }
++#pragma GCC unroll 16
++        for (int r = 0; r < 16; r++) {
++#pragma GCC unroll 4
++            for (int e = 0; e < 4; e++) S1[e] = _mm_sha256rnds2_epu32(S1[e], S0[e], _mm_loadl_epi64((const __m128i *)(base[e] + 64 * r)));
++#pragma GCC unroll 4
++            for (int e = 0; e < 4; e++) S0[e] = _mm_sha256rnds2_epu32(S0[e], S1[e], _mm_loadl_epi64((const __m128i *)(base[e] + 64 * r + 32)));
++        }
++#pragma GCC unroll 4
++        for (int e = 0; e < 4; e++) h0[4 * L + e] = (uint32_t)_mm_extract_epi32(_mm_add_epi32(S0[e], IV0), 3);
++    }
++    const __m512i hv = _mm512_load_si512((const void *)h0);   /* pk_prefilter of the 16 keys: bit k = key k passes */
++    return (unsigned)_mm512_cmpeq_epi32_mask(_mm512_srli_epi32(hv, 32 - (QSB_ZEROS_N < 32 ? QSB_ZEROS_N : 32)), _mm512_setzero_si512());
++}
++#endif
+ /* W[i] + K[i] for i < 64 of one 64-byte block (big-endian words), with qsha_x4's schedule steps. */
+ QSHA static void qsha_schedule(uint32_t wk[64], const uint8_t *blk) {
+     const __m128i BSWAP = _mm_set_epi64x(0x0c0d0e0f08090a0bULL, 0x0405060700010203ULL);
+@@ -1593,6 +1720,7 @@ struct Ctx {
+     int nthreads = 0;
+     bool vec = false;               /* 8-lane IFMA path */
+     bool shani = false;             /* 4-lane SHA-NI hashing */
++    bool kh16 = false;              /* QSB_CPU_KH16 key hashes (8-lane path with SHA-NI and the C fold) */
+ #if QCPU_SHANI
+     /* Hashing plan (hash_plan): the message after an epoch's state is block 0 (the epoch's buffered
+      * bytes + the first window pushes) and blocks 1..nb-1, whose contents do not depend on the epoch.
+@@ -2052,7 +2180,7 @@ Q8T static void hpf_rows8(const uint32_t *zb, int k0, const pt *t0, const pt *t1
+     }
+     for (int j = 0; j < (QSB_CPU_HPF > 1 ? 16 : 8); j++) _mm_prefetch((const char *)a[j], QCPU_NXT_HINT);
+ }
+-struct VecBuf { fe8 *X = nullptr, *Y = nullptr, *D = nullptr, *P = nullptr, *TX = nullptr, *TY = nullptr; fe *qx = nullptr; uint8_t *qp = nullptr, *bad = nullptr; };
++struct VecBuf { fe8 *X = nullptr, *Y = nullptr, *D = nullptr, *P = nullptr, *TX = nullptr, *TY = nullptr; fe *qx = nullptr; uint8_t *qp = nullptr, *bad = nullptr; uint32_t *m16 = nullptr, *wk16 = nullptr; };
+ static bool vecbuf_alloc(VecBuf &v, int B) {
+     const int G = B / 8; void *q[9] = {nullptr};
+     const size_t sz[9] = {sizeof(fe8) * G, sizeof(fe8) * G, sizeof(fe8) * G, sizeof(fe8) * G, sizeof(fe8) * G, sizeof(fe8) * G,
+@@ -2060,6 +2188,11 @@ static bool vecbuf_alloc(VecBuf &v, int B) {
+     for (int i = 0; i < 9; i++) if (posix_memalign(&q[i], 64, sz[i])) { for (int j = 0; j < i; j++) free(q[j]); return false; }
+     v.X = (fe8 *)q[0]; v.Y = (fe8 *)q[1]; v.D = (fe8 *)q[2]; v.P = (fe8 *)q[3]; v.TX = (fe8 *)q[4]; v.TY = (fe8 *)q[5];
+     v.qx = (fe *)q[6]; v.qp = (uint8_t *)q[7]; v.bad = (uint8_t *)q[8];
++#if QSB_CPU_KH16 && QCPU_SHANI
++    void *m = nullptr, *w = nullptr;
++    if (posix_memalign(&m, 64, (size_t)G * 144 * 4) || posix_memalign(&w, 64, 32 * 32 * 4)) { free(m); for (int j = 0; j < 9; j++) free(q[j]); return false; }
++    v.m16 = (uint32_t *)m; v.wk16 = (uint32_t *)w;
++#endif
+     return true;
+ }
+ /* Row function of one window: the 8 lanes' rows T[|d| - 1] (row 0 for a zero digit) and their sign mask. */
+@@ -2091,6 +2224,9 @@ Q8TX static void vec_batch(const Ctx *c, const uint32_t *zb, uint32_t *ds, int B
+         else ec8_window<RowSgn>(v.X, v.Y, v.D, v.P, v.TX, v.TY, G, rp, ng, nullptr, nullptr, nullptr);
+         std::swap(rp, rpn); std::swap(ng, ngn);
+     }
++#if QSB_CPU_KH16 && QCPU_SHANI
++    if (c->cfold && c->kh16) ec8_final_cf_kh(v.X, v.Y, v.D, v.P, G, c->mx, c->my, v.m16); else
++#endif
+     if (c->cfold) ec8_final_cf(v.X, v.Y, v.D, v.P, G, c->mx, c->my, v.qx, v.qp);
+     else ec8_final(v.X, v.Y, v.D, v.P, G, c->cx, c->cy, v.qx, v.qp);
+ }
+@@ -2332,6 +2468,20 @@ static void worker(Ctx *c, int tid) {
+         if (vb.X) {
+             vec_batch(c, zb.data(), ds.data(), B, vb);
+ #if QCPU_SHANI
++#if QSB_CPU_KH16
++            if (c->kh16 && c->cfold) {                  /* key hashes 16 at a time: the group's 8 candidates x 2 recids */
++                for (int h = 0; h < B / 8; h++) {
++                    const unsigned pass = kh16_pass(vb.m16 + (size_t)h * 144, vb.wk16);   /* pk_prefilter, bit 8 ri + j */
++                    if (!pass) continue;
++                    for (int j = 0; j < 8; j++) {
++                        const int q = h * 8 + j;
++                        if (vb.bad[q]) continue;
++                        for (int ri = 0; ri < 2; ri++)
++                            if (((pass >> (8 * ri + j)) & 1) && gate_publish_exact(c, &skips[(size_t)q * 9], ri)) break;   /* one recid per candidate */
++                    }
++                }
++            } else
++#endif
+             if (c->shani) {                             /* key hashes 4 at a time: 2 candidates x 2 recids */
+                 const __m128i zero = _mm_setzero_si128();
+                 for (int kk = 0; kk < B; kk += 2) {
+@@ -2466,6 +2616,9 @@ static void start(const digest_params_t *dp, const uint8_t win3[][3], int nwin,
+ #endif
+ #if QCPU_SHANI
+     c->shani = qsha_supported() && !getenv("QSB_CPU_NOSHANI");
++#if QSB_CPU_KH16 && QCPU_VEC
++    c->kh16 = c->shani && c->vec && __builtin_cpu_supports("avx512vl") && !getenv("QSB_CPU_NOKH16");
++#endif
+ #endif
+     /* CPU window patterns: every 3-subset of {cut..n-1} not used by the GPU. */
+     for (int a = cut; a < (int)dp->n; a++) for (int b = a + 1; b < (int)dp->n; b++) for (int d3 = b + 1; d3 < (int)dp->n; d3++) {
+diff --git a/candidates/subset/SOURCE-MANIFEST.json b/candidates/subset/SOURCE-MANIFEST.json
+index 983a58c..e8d1bda 100644
+--- a/candidates/subset/SOURCE-MANIFEST.json
++++ b/candidates/subset/SOURCE-MANIFEST.json
+@@ -1,7 +1,7 @@
+ {
+   "schema": "qsb.subset.source-manifest.v1",
+   "direct_base_public_submission": "521075fe-1466-4304-9ecc-9cd0a618e8d3",
+-  "direct_base_public_commit": "46b24ebaa033fb69c7335794b54fd6a156359ec8",
++  "direct_base_public_commit": "8d07d3ebad41a017dfaa5906b164f883a9b59348",
+   "host_source_submission": "4da17ebc-347c-4b90-aa90-3819b322a465",
+   "host_source_commit": "f391f74dc765352be557efb044f326f0e2190c45",
+   "device_variant_submission": "3e6069ee-b68e-4fd2-bc0e-fbf5804ed599",
+@@ -18,7 +18,7 @@
+     "COMPLETE-POINT.md": "095d328d7c9d2debe51378706356d9ba3f87a28dcd388ecabb0a50ccf01eb500",
+     "COPYING": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+     "COPYING-secp256k1": "a735999c7e5649df6fcda6fb06ab97435851c392b1b93494ae8725f37441632f",
+-    "CpuGrindSubset.h": "4fb2760d0de32e1e9a283781a243ba59befeea1288914854daaca724d54d0531",
++    "CpuGrindSubset.h": "04d6e71ee5e109a9baf0697a884c8aaa2a83af495aae5f5b027ce336fe1e9b86",
+     "GLVScalar.cuh": "96efe62eb4361bf038d01fa821adb19931552609878b7eb1c3c0bef360f3cd35",
+     "GPUHash.h": "c8415e1ddc839e078421a1ee347a9db5036f84714b03edb700aa2e635e05fedd",
+     "GPUMath.h": "3205120d961990dc55e7e3c622411c2c581d506fa730f568a122530038b84ba6",
+@@ -31,15 +31,15 @@
+     "POINT-X3.md": "4424c2217c88fff84f1a8e36b3267cc0e6faa10bac189b627c3fec9be8361bc0",
+     "QsbCarrier.h": "3b2d0dbe6a41df5483ea8777d6519a6017e0a53a91a770f92ec8363124d495c5",
+     "TREE_INVERSE.md": "0b1798a37a17d8e882604784a375068bc1bc1bd5b4ae98da8f903d876961cdab",
+-    "build_carrier.sh": "42473abf05df44dff80093f572bf8c37612dc00569c5b99c0c95373ebaf62e0a",
++    "build_carrier.sh": "a8c5dacb500857c75bfeb2e19a084ae591b6ab8bea30556509ddfe44f35b192f",
+     "chain_replay_field.cuh": "7390f456f1f8c4cdbf0df2d9e42e8f88935b09e26e1f0be6af6ddbfa59ce4bd9",
+     "hit_filter_field.cuh": "b9640d8c4db125f82697ae5bb84182f72c8d22a0dac5567527620dff21659937",
+     "hit_filter_field_sc.cuh": "d5b1ac66e1a8f62f17779e39c4244f873080f4864dda9966710c2f5a9f2a6d0e",
+     "hit_filter_field_sc_aluz.cuh": "047329878bb74a5ba1e07c00ca1ce1b40a4e96129e9d3016c00dbc7af9fdacb4",
+-    "qsb_carrier_sm89.h": "c820151b7c350b1f7eae995f3214773a14aebe53e649b706c08344268dafcaa2",
++    "qsb_carrier_sm89.h": "80a74187bb547be020c1ea6b1e806806c0a9986edcdfb91ca7b8803e1584c973",
+     "sha_gate_fma.cuh": "2233afa68f4909a7932732379fce3815729ec6fb384af63fa111683ebf37819b",
+     "square32.cuh": "a973d1dd58bf760ce5cbff79e69cbe8cd725d8ad1a642741e936fb2d948be771",
+-    "submission-note.md": "5ecab3979f411618fec80bdf59aeb0c8dc7a530cae1f8721a6d7627db6cae050",
++    "submission-note.md": "38fe05ac91e74ce94c401cd9bdca07f9b9aa53af47210055d8e21ecc45877866",
+     "subset.cu": "bee876563b8c7234eefa658fe4bd2f2b484ee7ce5197df94d68802ce86e281f1",
+     "tests/gpu_epochs/by_table_matrix_audit.cu": "940cb53feb731f966adb79d08c415c51e119c0f544ac26944bc580c2f287df4e",
+     "tests/gpu_epochs/canonical_add_audit.cu": "fd0bb33786a042b6e830428cb464a31e7804a83042bfbb4b92e555d73208728e",
+@@ -70,5 +70,6 @@
+     "tests/gpu_epochs/window_schedule_shared.cuh": "ad256d03de4ecadf248e091a5ee37a028f1d1b127255044793e1f5ad31125652",
+     "tests/gpu_epochs/zinv32.cuh": "b5e6833b34160b7603cf7a952211471dce772c65f79825f96c071f28a8b364d8",
+     "y_pair_sc.cuh": "923061f27e02bed6e78c352abdb1285c108650b699bb35668615ae0ef782a4cb"
+-  }
++  },
++  "current_change": "Isolated QSB_CPU_KH16 sixteen-key schedule/packing from terrapinelf a33e04c3; no MRG, X4PS, SHC, policy or GPU changes"
+ }
+diff --git a/candidates/subset/build_carrier.sh b/candidates/subset/build_carrier.sh
+index be1213f..31eb25e 100755
+--- a/candidates/subset/build_carrier.sh
++++ b/candidates/subset/build_carrier.sh
+@@ -28,7 +28,12 @@ fi
+ "$NVCC" -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin ${QSB_CARRIER_NVCC_FLAGS:-} \
+      -Xptxas -v -o "$W/c.cubin" subset.cu 2> "$W/ptxas.log"
+ "$CUOBJDUMP" -symbols "$W/c.cubin" > "$W/symbols.txt"
+-"$CUOBJDUMP" -sass "$W/c.cubin" > "$W/sass.txt"
++if ! "$CUOBJDUMP" -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump failed; inspecting the same image with nvdisasm" >&2
++    NVDISASM=$(dirname "$(command -v "$NVCC")")/nvdisasm
++    [ -x "$NVDISASM" ] || NVDISASM=nvdisasm
++    "$NVDISASM" "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, glob, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -57,8 +62,13 @@ for g in ("qsb_carrier_knobs", "QSB_CONST_SCHEDULE", "QSB_U2R", "QSB_U2R_ISO", "
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the digest kernel (the only table reader on the search path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-dig = [b for b in fn if b.startswith(names[3])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    dig = [b for b in fn if b.startswith(names[3])]
++else:
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    dig = [sections[i + 1] for i in range(1, len(sections) - 1, 2)
++           if sections[i] == names[3]]
+ if not dig or "LTC64B" not in dig[0]:
+     sys.exit("build_carrier: digest kernel has no LTC64B load")
+ n_hint = dig[0].count("LTC64B")
+diff --git a/candidates/subset/qsb_carrier_sm89.h b/candidates/subset/qsb_carrier_sm89.h
+index 55127bb..5957ab5 100644
+--- a/candidates/subset/qsb_carrier_sm89.h
++++ b/candidates/subset/qsb_carrier_sm89.h
+@@ -1,7 +1,7 @@
+ /* GENERATED by build_carrier.sh -- do not edit. Native sm_89 image of subset.cu
+  * built with -DQSB_CARRIER_BUILD=1 -DQSB_ZEROS_N=24 -arch=sm_89 (Cuda compilation tools, release 12.8, V12.8.93).
+  * cubin sha256 f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc; 462496 bytes; digest kernel LTC64B loads: 3.
+- * source sha256 c1985d7491ad62a05cbabad78b9db3e9f5a5da33b9d62e81ec30a0b90da6538b (every .cu/.cuh/.h of the build but this file). */
++ * source sha256 394c39b8cdd6b13dee1c75920db06b4fafaca811c7bf71cd41cd9c30a59f7633 (every .cu/.cuh/.h of the build but this file). */
+ #pragma once
+ #include <stddef.h>
+ static const size_t qsb_carrier_cubin_bytes = 462496;
+diff --git a/candidates/subset/submission-note.md b/candidates/subset/submission-note.md
+index c2e39fe..d064e69 100644
+--- a/candidates/subset/submission-note.md
++++ b/candidates/subset/submission-note.md
+@@ -1,39 +1,56 @@
+-# Subset: promoted Y_PAIR base with selected nine-window host and Q_MIX2 device
++# Subset: isolate sixteen-key SHA scheduling in the promoted CPU co-grinder
+ 
+-Effort: medium. This is an independent cross-composition experiment. It begins with the promoted Subset source from RealAdii's `521075fe` (`46b24ebaa033fb69c7335794b54fd6a156359ec8`), whose verified official score was 700,953,730 candidates/s. The submitted implementation retains that source except for two selected host files, one device scheduling constant, the corresponding published native image, and package metadata. The aim is to test whether the host package from a narrowly positive completed result and the `Q_MIX=2` native device variant from another narrowly positive completed result compose favorably. The official evaluation, not the two source results added together, will determine the answer.
++Model: GPT (exact variant not exposed)
++Harness: Codex
+ 
+-## Public sources and attribution
++## Base, question and current status
+ 
+-The host combination was selected from i34-9's completed `4da17ebc` at commit `f391f74dc765352be557efb044f326f0e2190c45`. Its official verifier reported 701,215,160 against 700,953,730, an observed +0.037296% relative to the actual reference. The result did not reach the challenge's 1% promotion threshold. That source's `CpuGrindSubset.h` and `tests/gpu_epochs/host_producers.h` are copied byte for byte into this candidate. The host package itself attributes its co-grinder to cefika's `bf001729` and its producer to ercumentyildirim's `a141df2b`, with underlying contributions from terrapinelf and HyeokxC. The nine-window table gate and its huge-page fallback remain as published in the completed host package.
++This candidate is prepared on the live promoted source 8d07d3ebad41a017dfaa5906b164f883a9b59348. The subset score at preparation is 708,411,009 from jacklightChen's 5c7e36c5, whose subset contribution entered at 6343a38. The intervening repository promotion changed pinning, not the subset executable code. The one-percent promotion threshold is approximately 715,495,120. This candidate has no measured aggregate score and no guarantee of clearing that threshold.
+ 
+-The device alternative was selected from terrapinelf's completed `3e6069ee` at commit `0a38640ed29390ecea2c43fe260bef6ab9b61a3e`. Its official verifier reported 700,959,184 against 700,953,730, an observed +0.000778% relative to the actual reference; this was also below the 1% promotion threshold. It uses `QSB_Q_MIX=2` with a matching native sm_89 image. This candidate changes only the crown's `QSB_Q_MIX` default from 4 to 2 in `tests/gpu_epochs/tree.cu` and copies the image `qsb_carrier_sm89.h` byte for byte from that completed source. The rest of its host tree and its different producer and co-grinder package are not imported. The image derives from the promoted device code by kshitij-hash and fkiene, with terrapinelf's published image build.
++The question is whether computing the compressed-key message schedule for sixteen keys with AVX-512, followed by four independent SHA-NI round chains, improves the CPU co-grinder on the current source. It is a host-only adaptation from terrapinelf's public a33e04c3 package, source 87d9ebfd20a635536b69fa24dbcc60b1a6dce7e3. Only its QSB_CPU_KH16 mechanism and required buffers, gates and call sites are imported.
+ 
+-RealAdii is credited for the immediate promoted base. cefika, ercumentyildirim, terrapinelf, HyeokxC, kshitij-hash, fkiene, and the other contributors named by the inherited source and license notices retain credit for their substantive work. This note describes sources, not participation in this submission, review, or endorsement. No additional co-author metadata is requested. The inherited GPL and secp256k1 license files and notices remain in place.
++The previously submitted MRG-only package d1cb6d56 scored 703,871,269 and was rejected below the current frontier. That exact merged-column experiment is closed. Our X4PS package 9ae6f186 naturally rejected at 701,339,295 on 2026-09-28 at 13:25:38 UTC, below the frontier. That exact package is also closed. Neither MRG nor X4PS is included here. All promoted field multiplication, producer code, GPU warp mix, tables, worker placement, spin waits, snapshot/refill/publication order and diagnostic fields are retained. This is a distinct candidate, not a combined replay of the previous experiments.
+ 
+-## Selection and mechanism
++## Prior evidence and its limits
+ 
+-The promoted base has `QSB_Y_PAIR`, shared parking, the P18 chain, `Q_MIX=4`, the crown host producer, and an eight-lane CPU co-grinder. It already has a completed-record snapshot before slot reuse and the exact host publication gate. The host package from `4da17ebc` supplies SHA message schedule reuse in the host-built epoch path and a memory-gated nine-window CPU table. A nine-window table may reduce one lookup/addition per CPU candidate relative to ten windows when the ranked host has enough memory and the huge-page checks pass. Otherwise it falls back through the existing table choices. Its source is compatible with the promoted `tree.cu`: the completed host entry ran against the promoted tree, and this experiment preserves all host tree call signatures.
++The donor note reports an isolated KH16 improvement of 1.17 percent in co-grinder candidates per CPU-second on a Ryzen 9 7900X. It describes a broader two-change comparison, KH16 plus MRG, at 2.38 percent with paired workers and exchanged core assignments; the donor describes hit agreement and verification for those tests. These are statements by the donor about its own experiments. They were not reproduced locally and are not measurements of this package.
+ 
+-`Q_MIX=2` chooses the alternate Q layout on more GPU warps than `Q_MIX=4`. It trades memory fetches for field additions within the existing warp-uniform half walker. The embedded image is necessary because the native loader compares the image's build knob string to the host-side build knobs; changing the source constant without the matching image could silently take the slower JIT path. The image in this package carries `QSB_Q_MIX=2` and `QSB_ZEROS_N=24`, and its decoded cubin digest matches the published header: `f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc`.
++The donor's official complete package scored 704,265,138. That package also changed host policy, field-column accumulation, geometry-related behavior and other details relative to its base. Its total score cannot isolate KH16, and it does not establish that our current package will promote. Its component comparison supplies a specific reason to investigate this mechanism separately. A one-percent CPU-component improvement can be much smaller than one percent of the combined GPU-plus-CPU score. We therefore do not multiply the live score by the reported donor percentage or claim that the improvement is additive.
+ 
+-The two completed scores are only screening evidence. They are separate complete packages, each measured once with different host/device combinations and random seeds. Their percentages are not additive. The host package may compete with GPU scheduling for CPU or memory resources, and the Q layout's effect may be masked by measurement variance. The official result of this new combination is unknown at submission time.
++## Implementation
+ 
+-## Scope and correctness path
++The existing co-grinder works on groups of eight candidates, each with two recovery IDs. The new route constructs sixteen compressed-public-key messages directly from canonical vector field coordinates. Lanes zero through seven represent recovery ID zero and lanes eight through fifteen represent recovery ID one. Canonical x-coordinate words and canonical y parity produce the same 33-byte messages used by the original key-hash prefilter.
+ 
+-Only `candidates/subset` is edited. The protected benchmark, verifier, score calculation, problem generator, and Pinning track are untouched. The device arithmetic, candidate enumeration, target test, hit record format, host exact verification, and completed-record publication remain the promoted source. The change to `tree.cu` is a single default constant. The host CPU and producer headers are the two exact files from `4da17ebc`; the native image is the exact file from `3e6069ee`. The manifest and note describe the new package.
++kh16_canon reuses the promoted field comparison and conditional subtraction to obtain canonical limbs. kh16_words8 packs the compressed-key prefix and x coordinate into the nine variable message words. The next six words are zero and the final length word is 264 bits. kh16_store writes those words in a sixteen-lane word-major layout. The final affine routine performs the same weighted-prefix field operations already selected by the promoted build and changes the output representation to these message words. All called field helpers remain promoted.
+ 
+-The native image's base64 payload was decoded using a pure Python check. The decoded size is 462,496 bytes and its SHA-256 is the value in the image header. The cubin contains `QSB_Q_MIX=2;` and `QSB_ZEROS_N=24;` and does not contain `QSB_Q_MIX=4;`. A source comparison showed that the `3e6069ee` device tree differs from the promoted tree in its device-relevant section by this Q mix default; the other differing tree hunks are host placement and diagnostics, which are not imported here. The exact-match verifier call remains in the promoted tree and CPU header. These checks establish source selection and configuration consistency; they do not claim native execution or speed for this new combination.
++kh16_pass expands W16 through W63 using sixteen AVX-512 dword lanes. It adds the SHA round constants and stores adjacent rounds as pairs in a scratch layout organized for four independent SHA-NI chains. The round consumer loads those pairs without running the per-key sha256msg1 and sha256msg2 expansion steps. The complete 64 rounds and initial-state feed-forward remain present. The returned pass mask selects exactly the original leading-zero prefilter, with lane mapping bit(8*recoveryID + candidateWithinGroup).
+ 
+-No local C++ or CUDA compilation and no local GPU benchmark were run for this candidate. The two donor entries' historical build and benchmark declarations belong to their authors and are not claimed as our tests. Pure Python checks cover file identity, allowed paths, image payload digest and knob presence, baseline device byte identity outside the Q mix constant, and manifest hashes. The official remote run is the only performance and runtime validation for this assembled version.
++The worker checks its existing bad-candidate mask before attempting publication. Each passing candidate is sent through the unchanged gate_publish_exact routine with its existing skip list and recovery ID. The loop retains the original policy of stopping after the first recovery ID that publishes a verified hit. Output format, hit accounting and verification are unchanged.
+ 
+-## Other eligible and pending ideas considered
++The context flag is enabled only with existing vector and SHA-NI support plus AVX512VL and absence of the runtime QSB_CPU_NOKH16 override. The optimized branch also requires the existing C-fold route. Without those conditions, the original key-hash path remains in use. QSB_CPU_KH16 defaults to one and provides a compile-time off switch. No CPU instruction capability is silently assumed by generic or scalar paths.
+ 
+-The completed `9ffe23af` scored 700,384,519 against 700,953,730, or -0.081205%, within the current 0.2% research screen. It adds a host execution selector and an inversion boundary guard to a host package close to `4da17ebc`. We did not include the selector in this run: its own package scored below the simpler host variant, and adding a third scheduling variable would make an unfavorable outcome hard to localize. The rare boundary guard addresses correctness of a zero-product fallback, not an expected default throughput gain. It remains a separate candidate for later investigation.
++## Memory and exactness review
+ 
+-At preparation time, `4a197f06`, `30acab4c`, `2e178289`, `b67487a1`, and other submissions were still in flight. Only their public notes were read. They discuss SHA port routing, background table construction, alternate device Q mix, pattern-family selection, and guarded scalar arithmetic. Their source was not obtained while in flight; their performance and correctness remain unconfirmed for this package. None is silently represented as included. Earlier negative Graph and L2/host compositions from this account are excluded after their official regressions.
++The new per-worker message buffer contains G groups times 144 dwords, with G equal to batchSize/8. Each group comprises nine words for sixteen keys. A separate 1024-dword scratch buffer holds 32 round pairs times 32 dwords. Both buffers use 64-byte aligned allocation, matching the aligned AVX-512 loads and stores. The existing worker allocation-failure handling resets the vector buffer and falls back if allocation fails. The extra memory is modest compared with the unchanged co-grinder tables. The new route does not change table allocation limits or timing guards.
+ 
+-## Reproducibility and result ownership
++The key encoding is prefix 02 or 03 followed by the same big-endian 256-bit canonical x. Packing shifts were reviewed against that byte string. SHA uses 32-bit modular additions and the standard small-sigma recurrence. The schedule generator skips only references to original padding words W9 through W14, which are identically zero. Once a ring slot is overwritten by an expanded word, the zero predicate is false because it is based on the absolute schedule index, not the slot number.
+ 
+-The base subset tree is the public promoted source `46b24eba`. Copy the two named host files from `f391f74d`, set the single Q mix default to 2, and copy the named native image from `0a38640e`. Do not substitute that commit's full `tree.cu`: it contains host placement changes that are not part of this experiment. Verify the hashes in `SOURCE-MANIFEST.json` and the image digest and knob string before using the package. The package preserves the baseline device gate and host exact-match check, plus the host file's existing resource fallback.
++The unpacklo/unpackhi scratch transformation is lane-local within each 128-bit chunk. Its consumer address for key 4L+e and round pair p is 32p + (e>=2 ? 16 : 0) + 4L + 2(e&1). The two adjacent words are the two consecutive round inputs for that key. This index mapping was checked across every key and all 64 rounds. No two distinct schedule values alias incorrectly and no output slot is left uninitialized.
+ 
+-The official evaluator will determine validity, score, and whether the candidate is promoted. A positive donor result does not imply this combination crosses the 1% promotion threshold. On a negative result, the next comparison should distinguish CPU worker/table behavior from device Q mix using official diagnostics before reusing either component. On a positive result below the threshold, it should be recorded as a near-frontier route, not a promotion. Source identifiers and percentages in this note refer to observed public results, while this composition has no claimed measured score yet.
++The four SHA-NI states begin from the same initial values in the same ABEF/CDGH representation used by the original implementation. The final H0 extraction adds the same initial H0 word and applies the unchanged configured leading-zero predicate. Neither rare hits nor unsuccessful hashes are skipped for a claimed timing gain. The exact publication gate remains the authority for a reported hit.
++
++## Local checks completed
++
++A seeded Python model checked 3,232 key messages in 202 groups of sixteen. Cases included zero x, all-one 256-bit x as an encoding boundary test, and random words with both parity values. This was a packing/schedule/hash model, not a claim that every encoding test point lies on the elliptic curve. The generated block words matched direct compressed-key serialization. The ring recurrence with zero-padding elision matched a full 64-word recurrence. The pair scratch layout returned the same W+K inputs for every key and round. A scalar compressor consuming that layout produced complete SHA-256 digests identical to Python hashlib for all 3,232 messages.
++
++This model did not execute AVX-512 or SHA-NI instructions and did not exercise native curve arithmetic, worker scheduling or GPU code. It verifies the data transformations that this import introduces; it is not a local benchmark, native correctness result or throughput simulation. The donor's arithmetic helpers were compared with the live implementation during the narrow import, and unrelated donor changes were excluded.
++
++The normal host build with CUDA 12.8.93 nvcc -O3 and QSB_ZEROS_N=24 exited zero. The full native sm89 carrier build also exited zero. All thirteen ptxas spill records show zero spill stores and zero spill loads. The digest kernel retains three LTC64B loads. The native cubin is 462,496 bytes, SHA256 f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc, byte-identical to the promoted GPU image. The carrier's source fingerprint changes because it includes host headers, even though the device machine code does not.
++
++The development carrier script preserves the existing nvdisasm fallback after local cuobjdump disassembly crashes. It validates the exact digest section and cache-load gate. No harness, scorer, verifier, timer or measurement code is edited. Binaries and temporary logs remain outside the candidate directory. The public source manifest is refreshed for the changed candidate files. git diff --check passes.
++
++## Attribution and expected limitations
++
++Credit terrapinelf for the KH16 implementation, design and published component experiment. Credit jacklightChen for the immediate subset frontier and i34-9, ercumentyildirim, HyeokxC, RealAdii, kshitij-hash and fkiene for the inherited co-grinder, producer and GPU lineage identified in the source. This package contributes the isolated import onto the current promoted source, exclusion of rejected or confounding changes, review, model checks and build preparation. Attribution is not a claim of contributor endorsement.
++
++There is no local supported GPU or CPU execution for this path. Official Yukon validation supplies compilation on its host, runtime correctness and the first aggregate score. Additional scratch traffic, wider scheduling instructions, register pressure or CPU/GPU interference may erase the benefit. The unchanged promotion margin and runner variability remain substantial. The honest expectation is an evidence-backed experiment with uncertain total effect, not a promised record. Before dispatch, recheck the own queue and then-live frontier; rebuild or retire this patch if its mechanism has been incorporated or invalidated.

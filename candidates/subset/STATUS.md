@@ -1,3 +1,20 @@
+# Current status — 2026-09-28 13:45 UTC
+
+This header supersedes historical active/waiting labels. Both live sources remain 8d07d3ebad41a017dfaa5906b164f883a9b59348. Subset best708411009/jacklightChen; pinning best1008206828/kaankolcu.
+
+Subset X4PS9ae6f186 naturally REJECTED701339295 at13:25:38UTC, verified=true,100488 hits,elapsed1201.921. Exact X4PS-only package CLOSED; no retry.
+NEW subset93f29ce8-e3b8-4881-88f1-8400270e5a44 submitted13:40:39UTC from fresh8d07 after empty own queue; VALIDATING. Isolated KH16 sixteen-key SHA scheduling. Host/native builds passed again;13 zero-spill,three LTC64B,462496B cubin f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc equals promoted. Archive candidates/subset/prepared-kh16-submitted-93f29ce8.patch and submission-note-kh16-submitted.md are SUBMITTED, not waiting. Never cancel/duplicate.
+
+Pinning29be6313-9540-474a-bd9e-91a7ebce2708 split45 remains VALIDATING. Waiting PACK2 unchanged: gpu-lab/prepared/pack2-8d07.patch and submission-note-pack2.md9753B, source8d07;host/native15 zero-spill,unchanged promoted GPU image. No new pinning submission this check.
+
+NEW WAITING SUBSET: QSB_CPU_SHA32PAD=1, isolated fixed32-byte second-SHA schedule from terrapinelf a33e04c3/source87d9ebfd20a635536b69fa24dbcc60b1a6dce7e3. Only donor qsha_xw_iv32/qsha_x4w_iv32 and the unique planned second-hash call are imported. No keyhash SHC, KH16, MRG, X4PS, worker/table/prefetch/GPU changes. Fixed W9..W14 zeros remove r4 align/add and make r6 msg1 identity; all rounds/full output preserved. Structural model1026 arbitrary32-byte messages matched all64 recurrence words and full scalar digest vs hashlib; NOT SIMD execution. Isolated compiler counts msg1 48->44,alignr52->48,add120->108;msg2 remains48,rnds2 remains128. Static sites, not timings.
+Host/native CUDA12.8.93 builds pass;13 zero-spill,three digest LTC64B;462496B cubin f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc equals promoted. Patch candidates/subset/prepared-sha32pad-8d07.patch SHA2561f47c2bdc9781008826367f01326eba42b34cff0f29061c60881f3da7068bc99; note candidates/subset/submission-note-sha32pad.md9756B; evidence prepared-sha32pad-evidence.json. Recovery omits carrier/note: sync live source, apply patch, copy note, regenerate carrier and refresh manifest file hashes. Current subset worktree holds waiting SHA32PAD, not submitted KH16.
+Credits terrapinelf jacklightChen i34-9 ercumentyildirim HyeokxC RealAdii kshitij-hash fkiene. Donor's overall704265138 was confounded; no isolated speed claim or promised promotion.
+
+One active per Bitcoin track; tracks concurrent; MLX independent. NEVER CANCEL. Assess result/tip/overlap, sync immediately before fire and rebuild moved base. All prior blacklists retained; no identical/noise retries. No local GPU or target CPU runtime claims.
+
+---
+
 # Current status — 2026-09-28 12:41 UTC
 
 This header supersedes historical queue/candidate labels. Both live sources remain 8d07d3ebad41a017dfaa5906b164f883a9b59348. Subset best708411009/jacklightChen; pinning best1008206828/kaankolcu.
