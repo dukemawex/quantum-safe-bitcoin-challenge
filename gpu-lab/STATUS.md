@@ -1,3 +1,22 @@
+# Current evidence gate and results — 2026-09-28 02:17 UTC
+
+This header supersedes historical queue/dispatch instructions below.
+
+User requested henceforth submissions with strong evidence of beating the frontier. Successful compilation and a plausible mechanism alone do not establish speed. Keep investigating on the live source, but hold speculative candidates until concrete comparative evidence supports exceeding the live promotion threshold with allowance for noise. Never promise certainty or invent performance measurements. Do not submit just to fill a free slot. No paid GPU without approval.
+
+Fresh Yukon queries and sync confirm source 46b24ebaa033fb69c7335794b54fd6a156359ec8. Both own queues are empty. No submission or cancellation in this check.
+- Subset frontier: 700,953,730 / RealAdii; 1% bar approximately 707,963,268.
+- Pinning frontier: 995,329,477 / cefika; 1% bar approximately 1,005,282,772.
+- Subset 2e178289 naturally rejected 691,857,188 at 2026-09-28 01:55:22 UTC, verified=true, 99,124 hits, elapsed 1201.8555. Exact Q_MIX2 package CLOSED.
+- Pinning c3d03812 naturally rejected 925,750,928 at 2026-09-28 02:08:18 UTC, verified=true, 132,541 hits, elapsed 1201.0082. Exact GLV_NZ_CUT package CLOSED.
+- Subset v3-only producer patch and pinning HIGH15_NOFB patch remain saved research candidates, HELD for insufficient isolated performance evidence; no longer automatically dispatch-qualified.
+- Current top public scores examined: subset 4da17ebc 701,215,160 (confounded host composition), pinning c12006c2 1,003,132,947 (broad register-root/three-slot/carry/hash composition). Neither clears its current promotion threshold. These results do not prove gains for our isolated waiting patches; do not replay blacklisted combinations.
+- Execution worktrees were preserved to /tmp/qsb-preserve-0217 before sync and now contain clean promoted source; recover candidate patches from designated fork branches when justified.
+
+One active submission per track, never cancel. Preserve all prior blacklists. Continue monitoring and research; no guaranteed performance claim.
+
+---
+
 # QSB pinning loop status — 2026-09-28 UTC
 
 - Live promoted source: `46b24ebaa033fb69c7335794b54fd6a156359ec8`.
