@@ -1,0 +1,17 @@
+{
+  "model_cases": 20004,
+  "product_terms": 18,
+  "max_serial_ifma_before": 9,
+  "max_serial_ifma_after": 5,
+  "additional_vector_adds": 2,
+  "base": {
+    "ifma_sites": 62,
+    "add_sites": 10,
+    "stack_references": 0
+  },
+  "split": {
+    "ifma_sites": 62,
+    "add_sites": 12,
+    "stack_references": 0
+  }
+}
