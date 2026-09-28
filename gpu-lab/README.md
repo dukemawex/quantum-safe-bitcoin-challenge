@@ -1,3 +1,21 @@
+# Current status — 2026-09-28 22:02 UTC
+
+This header supersedes older active/waiting labels. Live source both tracks remains8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.
+
+Pinning CPU SHA32PAD246a0544 naturally REJECTED986175788 at21:44:12UTC,verified=true,141208 hits,elapsed1201.1434. Exact second-SHA32PAD-only package CLOSED; no retry.
+NEW pinning92fb758c-1b05-4771-ac87-df79ff008fe8 submitted21:59:32UTC from fresh8d07 after empty own queue; VALIDATING in final query. Isolated CPU KEY33PAD word-major compressed-key SHA specialization. Native/host passed again;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Archive gpu-lab/prepared/key33pad-submitted-92fb758c.patch and gpu-lab/submission-note-key33pad-submitted.md are SUBMITTED, not waiting. Never cancel/duplicate.
+
+Subset372154a4-3ead-43c7-b6cc-1b43fa6dd4bd SHA32PAD remains VALIDATING. Waiting subset KEY33PAD unchanged: candidates/subset/prepared-key33pad-8d07.patch and submission-note-key33pad.md9730B;13 zero-spill native/host,unchanged promoted device image. Patch SHA2560032f2431fa298e2e121e25624734d8ff271f45a4ef4ec34c32f62c433d8dc84. No KH16 or submitted second-SHA32PAD in waiting source.
+
+NEW WAITING PINNING: QSB_CG_NORM_IFMA=1, final canonical correction only in CPU IFMA fnorm. Replace t0+=(0-x)&C with QI_LO(t0,x,C), where unchanged exact comparison gives x in{0,1} and C=0x1000003D1; x*C<2^33 so the52-bit low product is exact. All comparisons,carries,masks,outputs and callers unchanged. No submitted KEY33PAD,closedsecond-SHA32PAD,FSEL3,PACK2,split45,VLSHA,square,GPU/controller changes. Independent adaptation of live normalization code.
+Scalar model20010 legal limb vectors below2^62 matched old/new exact limbs and big-integer modulo p; x0 in20005 cases,x1 in5 boundary cases. NOT IFMA execution. Actual-source GCC13.3/O3 fnorm wrapper: vpmadd52luq1->2,vpaddq9->8,vpsubq1->0,vpand12->11,vpxor1->0;vmovdqa7 unchanged;total static vector sites53->50,stack-reference sites0 both. Fewer sites do not prove speed; added IFMA latency/port contention can hurt.
+Native/host CUDA12.8.93 exit0;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Note9877B,no local runtime/gain/promotion claim.
+Patch gpu-lab/prepared/norm-ifma-8d07.patch SHA2562b97b97c61d7a36d7c4e10889250cc929b50372aa5b668518b1c04f737ceb495; note gpu-lab/submission-note-norm-ifma.md; evidence gpu-lab/prepared/norm-ifma-evidence.json. Recovery omits note/carrier: sync live,apply,copy note,regenerate. Current pinning execution tree holds waiting NORM_IFMA,not submitted KEY33PAD. Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent; no new donor import or speed claim.
+
+One own active per track; tracks concurrent; MLX independent. NEVER CANCEL. Reassess live tip,result,overlap/blacklists and fresh own queue before fire; rebuild moved source. No identical/noise retries or local GPU/targetCPU execution claims.
+
+---
+
 # Current status — 2026-09-28 20:04 UTC
 
 This header supersedes older active/waiting labels. Live source both tracks remains8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.

@@ -1,0 +1,35 @@
+{
+  "model_cases": 20010,
+  "correction_counts": [
+    20005,
+    5
+  ],
+  "model_scope": "scalar integer model of fnorm legal limbs below2^62; not IFMA execution",
+  "runtime_measured": false,
+  "static_wrapper_sites": {
+    "0": {
+      "vpmadd52luq": 1,
+      "vpaddq": 9,
+      "vpsubq": 1,
+      "vpand": 12,
+      "vpandq": 0,
+      "vpxor": 1,
+      "vpxorq": 0,
+      "vmovdqa": 7,
+      "vector_sites": 53,
+      "stack_reference_sites": 0
+    },
+    "1": {
+      "vpmadd52luq": 2,
+      "vpaddq": 8,
+      "vpsubq": 0,
+      "vpand": 11,
+      "vpandq": 0,
+      "vpxor": 0,
+      "vpxorq": 0,
+      "vmovdqa": 7,
+      "vector_sites": 50,
+      "stack_reference_sites": 0
+    }
+  }
+}
