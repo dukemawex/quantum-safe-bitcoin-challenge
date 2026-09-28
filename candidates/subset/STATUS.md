@@ -1,3 +1,21 @@
+# Current status — 2026-09-28 10:08 UTC
+
+This header supersedes historical active/waiting labels below. Both tracks remain on live source 8d07d3ebad41a017dfaa5906b164f883a9b59348. Subset best708411009/jacklightChen; pinning best1008206828/kaankolcu.
+
+Pinning symmetric-square489fa7b9 naturally REJECTED979150238 at09:35:29UTC, verified=true,140252 hits,elapsed1201.5715. Exact symmetric-square package CLOSED; no retry.
+
+New pinning e130e912-8b10-4d44-9c0c-1426fc5055d4 submitted10:03:56UTC from freshly synced8d07 after empty own queue. VALIDATING. Isolated QSB_CG_VL_SHA native256-bit rotates; original promoted field arithmetic. Host/native builds passed again;15 zero-spill records,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Archive gpu-lab/prepared/vlsha-submitted-e130e912.patch and gpu-lab/submission-note-vlsha-submitted.md are SUBMITTED, not waiting. No cancellation.
+
+Subset9ae6f186-00d1-4004-88f3-6331eb838c98 X4PS remains VALIDATING. Waiting KH16 remains unchanged on8d07: candidates/subset/prepared-kh16-8d07.patch and submission-note-kh16.md,10155B. Native/host passed13 zero-spill,unchanged device image. Do not duplicate current active.
+
+NEW WAITING PINNING: QSB_CG_SPLIT45=1 splits the high/low accumulators in CPU IFMA fmul columns c4/c5 only. Each nine-update recurrence becomes independent4/5-update branches plus one add. Every product and reduction preserved; no VL SHA, symmetric square, GPU/host-policy changes. Structural model20004 legal W-form input pairs matched exact unreduced columns. Isolated compiled wrappers both62 IFMA sites, adds10->12,zero stack-reference sites; these are static code checks, not timings. Native/host CUDA12.8.93 builds passed;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Extra adds/register pressure can hurt; no measured gain or promised promotion.
+Patch gpu-lab/prepared/split45-8d07.patch SHA25677cb0a928f8ae67d440d6afa896d8bc62ef463d2a18653075856d09654a23395; note gpu-lab/submission-note-split45.md9326B; evidence gpu-lab/prepared/split45-evidence.json. Recovery patch omits carrier/note: apply to fresh then-live source, copy note and regenerate carrier. Current pinning tree holds waiting split45, not submitted VL SHA.
+Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent.
+
+One own active per Bitcoin track; tracks concurrent; MLX independent. NEVER CANCEL. At natural completion reassess result/tip/overlap and rebuild on moved source before dispatch. All previous blacklists remain; no identical/noise retries. No local CPU/GPU runtime or performance claim.
+
+---
+
 # Current status — 2026-09-28 08:15 UTC
 
 This header supersedes older active/waiting labels. Source both tracks8d07d3ebad41a017dfaa5906b164f883a9b59348; subset best708411009/jacklightChen; pinning best1008206828/kaankolcu.
