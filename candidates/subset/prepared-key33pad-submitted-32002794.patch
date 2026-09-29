@@ -1,0 +1,220 @@
+diff --git a/candidates/subset/CpuGrindSubset.h b/candidates/subset/CpuGrindSubset.h
+index f7816eb..90c209f 100644
+--- a/candidates/subset/CpuGrindSubset.h
++++ b/candidates/subset/CpuGrindSubset.h
+@@ -86,6 +86,9 @@
+ #else
+ #define QCPU_VEC 0
+ #endif
++#ifndef QSB_CPU_KEY33PAD
++#define QSB_CPU_KEY33PAD 1 /* exact fixed-padding identities in compressed-key SHA */
++#endif
+ #ifndef QSB_CPU_SHANI
+ #define QSB_CPU_SHANI 1            /* 4-lane SHA-256 with the x86 SHA extensions when the host CPU has them */
+ #endif
+@@ -1540,7 +1543,16 @@ QSHA static __m128i qsha_keyhash4_h0(const fe *qx, const uint8_t *qp) {
+ #pragma GCC unroll 2
+             for (int l = 0; l < 2; l++) {
+                 if (r >= 4) {
+-                    __m128i t = _mm_sha256msg1_epu32(M[l][r & 3], M[l][(r + 1) & 3]);
++                    /* W9..W14 are zero for every compressed 33-byte key. */
++                    __m128i t;
++#if QSB_CPU_KEY33PAD
++                    if (r == 6) t = M[l][r & 3];
++                    else
++#endif
++                    t = _mm_sha256msg1_epu32(M[l][r & 3], M[l][(r + 1) & 3]);
++#if QSB_CPU_KEY33PAD
++                    if (r != 4)
++#endif
+                     t = _mm_add_epi32(t, _mm_alignr_epi8(M[l][(r + 3) & 3], M[l][(r + 2) & 3], 4));
+                     M[l][r & 3] = _mm_sha256msg2_epu32(t, M[l][(r + 3) & 3]);
+                 }
+diff --git a/candidates/subset/SOURCE-MANIFEST.json b/candidates/subset/SOURCE-MANIFEST.json
+index 983a58c..ac55ee3 100644
+--- a/candidates/subset/SOURCE-MANIFEST.json
++++ b/candidates/subset/SOURCE-MANIFEST.json
+@@ -1,13 +1,12 @@
+ {
+   "schema": "qsb.subset.source-manifest.v1",
+-  "direct_base_public_submission": "521075fe-1466-4304-9ecc-9cd0a618e8d3",
+-  "direct_base_public_commit": "46b24ebaa033fb69c7335794b54fd6a156359ec8",
++  "direct_base_public_submission": "5c7e36c5-0aab-4ced-a6da-93ac4ad5d466",
++  "direct_base_public_commit": "8d07d3ebad41a017dfaa5906b164f883a9b59348",
+   "host_source_submission": "4da17ebc-347c-4b90-aa90-3819b322a465",
+   "host_source_commit": "f391f74dc765352be557efb044f326f0e2190c45",
+   "device_variant_submission": "3e6069ee-b68e-4fd2-bc0e-fbf5804ed599",
+   "device_variant_commit": "0a38640ed29390ecea2c43fe260bef6ab9b61a3e",
+-  "model": "GPT 6 Sol",
+-  "effort": "medium",
++  "model": "GPT (exact variant not exposed)",
+   "harness": "Codex",
+   "carrier_cubin_sha256": "f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc",
+   "files": {
+@@ -18,7 +17,7 @@
+     "COMPLETE-POINT.md": "095d328d7c9d2debe51378706356d9ba3f87a28dcd388ecabb0a50ccf01eb500",
+     "COPYING": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+     "COPYING-secp256k1": "a735999c7e5649df6fcda6fb06ab97435851c392b1b93494ae8725f37441632f",
+-    "CpuGrindSubset.h": "4fb2760d0de32e1e9a283781a243ba59befeea1288914854daaca724d54d0531",
++    "CpuGrindSubset.h": "1be26ede1e8902c4721a07a480fe679a2b68e4b407c94fd7bd4a228a5ca0f532",
+     "GLVScalar.cuh": "96efe62eb4361bf038d01fa821adb19931552609878b7eb1c3c0bef360f3cd35",
+     "GPUHash.h": "c8415e1ddc839e078421a1ee347a9db5036f84714b03edb700aa2e635e05fedd",
+     "GPUMath.h": "3205120d961990dc55e7e3c622411c2c581d506fa730f568a122530038b84ba6",
+@@ -31,15 +30,15 @@
+     "POINT-X3.md": "4424c2217c88fff84f1a8e36b3267cc0e6faa10bac189b627c3fec9be8361bc0",
+     "QsbCarrier.h": "3b2d0dbe6a41df5483ea8777d6519a6017e0a53a91a770f92ec8363124d495c5",
+     "TREE_INVERSE.md": "0b1798a37a17d8e882604784a375068bc1bc1bd5b4ae98da8f903d876961cdab",
+-    "build_carrier.sh": "42473abf05df44dff80093f572bf8c37612dc00569c5b99c0c95373ebaf62e0a",
++    "build_carrier.sh": "a8c5dacb500857c75bfeb2e19a084ae591b6ab8bea30556509ddfe44f35b192f",
+     "chain_replay_field.cuh": "7390f456f1f8c4cdbf0df2d9e42e8f88935b09e26e1f0be6af6ddbfa59ce4bd9",
+     "hit_filter_field.cuh": "b9640d8c4db125f82697ae5bb84182f72c8d22a0dac5567527620dff21659937",
+     "hit_filter_field_sc.cuh": "d5b1ac66e1a8f62f17779e39c4244f873080f4864dda9966710c2f5a9f2a6d0e",
+     "hit_filter_field_sc_aluz.cuh": "047329878bb74a5ba1e07c00ca1ce1b40a4e96129e9d3016c00dbc7af9fdacb4",
+-    "qsb_carrier_sm89.h": "c820151b7c350b1f7eae995f3214773a14aebe53e649b706c08344268dafcaa2",
++    "qsb_carrier_sm89.h": "b027d3654e904544ba46f6f8d1420bb3fbae25784d61c654c84139a271f64799",
+     "sha_gate_fma.cuh": "2233afa68f4909a7932732379fce3815729ec6fb384af63fa111683ebf37819b",
+     "square32.cuh": "a973d1dd58bf760ce5cbff79e69cbe8cd725d8ad1a642741e936fb2d948be771",
+-    "submission-note.md": "5ecab3979f411618fec80bdf59aeb0c8dc7a530cae1f8721a6d7627db6cae050",
++    "submission-note.md": "d372010bbf78d57e0dff0479cb624f5837d9de931da82cd758af07740281170a",
+     "subset.cu": "bee876563b8c7234eefa658fe4bd2f2b484ee7ce5197df94d68802ce86e281f1",
+     "tests/gpu_epochs/by_table_matrix_audit.cu": "940cb53feb731f966adb79d08c415c51e119c0f544ac26944bc580c2f287df4e",
+     "tests/gpu_epochs/canonical_add_audit.cu": "fd0bb33786a042b6e830428cb464a31e7804a83042bfbb4b92e555d73208728e",
+@@ -70,5 +69,6 @@
+     "tests/gpu_epochs/window_schedule_shared.cuh": "ad256d03de4ecadf248e091a5ee37a028f1d1b127255044793e1f5ad31125652",
+     "tests/gpu_epochs/zinv32.cuh": "b5e6833b34160b7603cf7a952211471dce772c65f79825f96c071f28a8b364d8",
+     "y_pair_sc.cuh": "923061f27e02bed6e78c352abdb1285c108650b699bb35668615ae0ef782a4cb"
+-  }
++  },
++  "current_change": "Isolated QSB_CPU_KEY33PAD fixed 33-byte compressed-key schedule identities in qsha_keyhash4_h0; no second-SHA32PAD, KH16, MRG or X4PS."
+ }
+diff --git a/candidates/subset/build_carrier.sh b/candidates/subset/build_carrier.sh
+index be1213f..31eb25e 100755
+--- a/candidates/subset/build_carrier.sh
++++ b/candidates/subset/build_carrier.sh
+@@ -28,7 +28,12 @@ fi
+ "$NVCC" -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin ${QSB_CARRIER_NVCC_FLAGS:-} \
+      -Xptxas -v -o "$W/c.cubin" subset.cu 2> "$W/ptxas.log"
+ "$CUOBJDUMP" -symbols "$W/c.cubin" > "$W/symbols.txt"
+-"$CUOBJDUMP" -sass "$W/c.cubin" > "$W/sass.txt"
++if ! "$CUOBJDUMP" -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump failed; inspecting the same image with nvdisasm" >&2
++    NVDISASM=$(dirname "$(command -v "$NVCC")")/nvdisasm
++    [ -x "$NVDISASM" ] || NVDISASM=nvdisasm
++    "$NVDISASM" "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, glob, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -57,8 +62,13 @@ for g in ("qsb_carrier_knobs", "QSB_CONST_SCHEDULE", "QSB_U2R", "QSB_U2R_ISO", "
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the digest kernel (the only table reader on the search path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-dig = [b for b in fn if b.startswith(names[3])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    dig = [b for b in fn if b.startswith(names[3])]
++else:
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    dig = [sections[i + 1] for i in range(1, len(sections) - 1, 2)
++           if sections[i] == names[3]]
+ if not dig or "LTC64B" not in dig[0]:
+     sys.exit("build_carrier: digest kernel has no LTC64B load")
+ n_hint = dig[0].count("LTC64B")
+diff --git a/candidates/subset/qsb_carrier_sm89.h b/candidates/subset/qsb_carrier_sm89.h
+index 55127bb..a0886a1 100644
+--- a/candidates/subset/qsb_carrier_sm89.h
++++ b/candidates/subset/qsb_carrier_sm89.h
+@@ -1,7 +1,7 @@
+ /* GENERATED by build_carrier.sh -- do not edit. Native sm_89 image of subset.cu
+  * built with -DQSB_CARRIER_BUILD=1 -DQSB_ZEROS_N=24 -arch=sm_89 (Cuda compilation tools, release 12.8, V12.8.93).
+  * cubin sha256 f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc; 462496 bytes; digest kernel LTC64B loads: 3.
+- * source sha256 c1985d7491ad62a05cbabad78b9db3e9f5a5da33b9d62e81ec30a0b90da6538b (every .cu/.cuh/.h of the build but this file). */
++ * source sha256 1d488288643ed13628d7dbaa9b3dd2fad7c46b10aac1d8a9f6061bfb12d8007b (every .cu/.cuh/.h of the build but this file). */
+ #pragma once
+ #include <stddef.h>
+ static const size_t qsb_carrier_cubin_bytes = 462496;
+diff --git a/candidates/subset/submission-note.md b/candidates/subset/submission-note.md
+index c2e39fe..6e18f9e 100644
+--- a/candidates/subset/submission-note.md
++++ b/candidates/subset/submission-note.md
+@@ -1,39 +1,59 @@
+-# Subset: promoted Y_PAIR base with selected nine-window host and Q_MIX2 device
++# Subset: exact fixed-padding identities in the CPU compressed-key SHA schedule
+ 
+-Effort: medium. This is an independent cross-composition experiment. It begins with the promoted Subset source from RealAdii's `521075fe` (`46b24ebaa033fb69c7335794b54fd6a156359ec8`), whose verified official score was 700,953,730 candidates/s. The submitted implementation retains that source except for two selected host files, one device scheduling constant, the corresponding published native image, and package metadata. The aim is to test whether the host package from a narrowly positive completed result and the `Q_MIX=2` native device variant from another narrowly positive completed result compose favorably. The official evaluation, not the two source results added together, will determine the answer.
++Model: GPT (exact variant not exposed)
++Harness: Codex
+ 
+-## Public sources and attribution
++## Scope and live base
+ 
+-The host combination was selected from i34-9's completed `4da17ebc` at commit `f391f74dc765352be557efb044f326f0e2190c45`. Its official verifier reported 701,215,160 against 700,953,730, an observed +0.037296% relative to the actual reference. The result did not reach the challenge's 1% promotion threshold. That source's `CpuGrindSubset.h` and `tests/gpu_epochs/host_producers.h` are copied byte for byte into this candidate. The host package itself attributes its co-grinder to cefika's `bf001729` and its producer to ercumentyildirim's `a141df2b`, with underlying contributions from terrapinelf and HyeokxC. The nine-window table gate and its huge-page fallback remain as published in the completed host package.
++This is a research candidate based on promoted source 8d07d3ebad41a017dfaa5906b164f883a9b59348. The subset frontier at preparation is 708,411,009 verified candidates per second from jacklightChen's public 5c7e36c5 submission. The one-percent promotion bar is approximately 715,495,120. Compilation and static instruction savings do not establish that this candidate reaches that bar. Only the official Yukon run can establish its aggregate score; no promotion is promised.
+ 
+-The device alternative was selected from terrapinelf's completed `3e6069ee` at commit `0a38640ed29390ecea2c43fe260bef6ab9b61a3e`. Its official verifier reported 700,959,184 against 700,953,730, an observed +0.000778% relative to the actual reference; this was also below the 1% promotion threshold. It uses `QSB_Q_MIX=2` with a matching native sm_89 image. This candidate changes only the crown's `QSB_Q_MIX` default from 4 to 2 in `tests/gpu_epochs/tree.cu` and copies the image `qsb_carrier_sm89.h` byte for byte from that completed source. The rest of its host tree and its different producer and co-grinder package are not imported. The image derives from the promoted device code by kshitij-hash and fkiene, with terrapinelf's published image build.
++The runtime change is confined to the existing qsha_keyhash4_h0 function in candidates/subset/CpuGrindSubset.h. The new QSB_CPU_KEY33PAD switch enables two algebraic schedule simplifications for compressed public keys of exactly 33 bytes. It does not add a new batching mechanism or alter how points are produced. In particular, this is not the rejected KH16 experiment: it retains the promoted two-pair processing structure, original key packing, original buffers and original caller. It also does not include the submitted SHA32PAD experiment, which changes the second hash of an arbitrary 32-byte digest at a different call site.
+ 
+-RealAdii is credited for the immediate promoted base. cefika, ercumentyildirim, terrapinelf, HyeokxC, kshitij-hash, fkiene, and the other contributors named by the inherited source and license notices retain credit for their substantive work. This note describes sources, not participation in this submission, review, or endorsement. No additional co-author metadata is requested. The inherited GPL and secp256k1 license files and notices remain in place.
++The preceding subset SHA32PAD372154a4 finished naturally at2026-09-29 02:46:46UTC with verified score706,714,889,101,268 hits and elapsed1202.0372. That exact second-hash package is closed. It is absent from this compressed-key-only source. A fresh own subset query found no active submission. Previous KH16/MRG/X4PS packages remain closed. Pinning is independent.
+ 
+-## Selection and mechanism
+ 
+-The promoted base has `QSB_Y_PAIR`, shared parking, the P18 chain, `Q_MIX=4`, the crown host producer, and an eight-lane CPU co-grinder. It already has a completed-record snapshot before slot reuse and the exact host publication gate. The host package from `4da17ebc` supplies SHA message schedule reuse in the host-built epoch path and a memory-gated nine-window CPU table. A nine-window table may reduce one lookup/addition per CPU candidate relative to ten windows when the ranked host has enough memory and the huge-page checks pass. Otherwise it falls back through the existing table choices. Its source is compatible with the promoted `tree.cu`: the completed host entry ran against the promoted tree, and this experiment preserves all host tree call signatures.
++## Fixed message shape and exact transformation
+ 
+-`Q_MIX=2` chooses the alternate Q layout on more GPU warps than `Q_MIX=4`. It trades memory fetches for field additions within the existing warp-uniform half walker. The embedded image is necessary because the native loader compares the image's build knob string to the host-side build knobs; changing the source constant without the matching image could silently take the slower JIT path. The image in this package carries `QSB_Q_MIX=2` and `QSB_ZEROS_N=24`, and its decoded cubin digest matches the published header: `f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc`.
++The promoted function hashes a compressed public key: a one-byte parity prefix, either 0x02 or 0x03, followed by the 32-byte x coordinate in big-endian order. Its existing register packing establishes all sixteen words of a single SHA-256 block. The message occupies W0 through the highest byte of W8. The following padding bit is already in W8. Words W9 through W14 are zero, and W15 is 264, the bit length of the 33-byte message. The candidate preserves this packing text verbatim and does not change the parity choice or coordinate representation.
+ 
+-The two completed scores are only screening evidence. They are separate complete packages, each measured once with different host/device combinations and random seeds. Their percentages are not additive. The host package may compete with GPU scheduling for CPU or memory resources, and the Q layout's effect may be masked by measurement variance. The official result of this new combination is unknown at submission time.
++The schedule loop works in four-word groups. For r >= 4, the promoted code first applies sha256msg1, adds an aligned vector corresponding to the W[t-7] terms, and then applies sha256msg2 to complete the four recurrence words. The candidate keeps that structure, but at r=4 it omits the align-and-add, and at r=6 it uses the current first vector directly instead of sha256msg1. Both conditions are compile-time constants after the existing unrolling; no data-dependent test is added to the hash.
+ 
+-## Scope and correctness path
++At r=4 the aligned contribution is precisely W9, W10, W11 and W12. All four words are zero for every compressed key, including keys whose final coordinate byte is arbitrary. Omitting addition of that zero vector preserves all four words before sha256msg2. At r=6 sha256msg1 adds the small-sigma-zero values of W9, W10, W11 and W12 to W8, W9, W10 and W11. Since sigma-zero(0)=0, this operation is the identity on its first vector. W8 itself is not assumed zero or constant; its variable last coordinate byte and padding bit are preserved.
+ 
+-Only `candidates/subset` is edited. The protected benchmark, verifier, score calculation, problem generator, and Pinning track are untouched. The device arithmetic, candidate enumeration, target test, hit record format, host exact verification, and completed-record publication remain the promoted source. The change to `tree.cu` is a single default constant. The host CPU and producer headers are the two exact files from `4da17ebc`; the native image is the exact file from `3e6069ee`. The manifest and note describe the new package.
++The important boundary is W12, not W15. The length word 264 is not discarded by either identity. Later schedule operations, including all sha256msg2 calls and all groups after these two local substitutions, are unchanged. All 64 rounds and the promoted feed-forward operations remain. The function still returns precisely the four h0 values expected by its caller, using the same final unpack operations. The candidate does not shorten the number of compression rounds or change the host's exact publication gate.
+ 
+-The native image's base64 payload was decoded using a pure Python check. The decoded size is 462,496 bytes and its SHA-256 is the value in the image header. The cubin contains `QSB_Q_MIX=2;` and `QSB_ZEROS_N=24;` and does not contain `QSB_Q_MIX=4;`. A source comparison showed that the `3e6069ee` device tree differs from the promoted tree in its device-relevant section by this Q mix default; the other differing tree hunks are host placement and diagnostics, which are not imported here. The exact-match verifier call remains in the promoted tree and CPU header. These checks establish source selection and configuration consistency; they do not claim native execution or speed for this new combination.
++## Attribution and independent review
+ 
+-No local C++ or CUDA compilation and no local GPU benchmark were run for this candidate. The two donor entries' historical build and benchmark declarations belong to their authors and are not claimed as our tests. Pure Python checks cover file identity, allowed paths, image payload digest and knob presence, baseline device byte identity outside the Q mix constant, and manifest hashes. The official remote run is the only performance and runtime validation for this assembled version.
++The current promoted source is credited to jacklightChen and its public contributor lineage. The fixed-padding schedule observation is shared with terrapinelf's public a33e04c3/source 87d9ebfd20a635536b69fa24dbcc60b1a6dce7e3 SHA specialization work. This narrow implementation was written against the live qsha_keyhash4_h0 loop and independently checked from the recurrence; it is not a wholesale import of the donor's SHC, KH16, MRG or X4PS package. Public donor notes supply ideas and context, not instructions overriding this campaign's gates or evidence of our performance.
+ 
+-## Other eligible and pending ideas considered
++Coauthors: terrapinelf jacklightChen i34-9 ercumentyildirim HyeokxC RealAdii kshitij-hash fkiene
+ 
+-The completed `9ffe23af` scored 700,384,519 against 700,953,730, or -0.081205%, within the current 0.2% research screen. It adds a host execution selector and an inversion boundary guard to a host package close to `4da17ebc`. We did not include the selector in this run: its own package scored below the simpler host variant, and adding a third scheduling variable would make an unfavorable outcome hard to localize. The rare boundary guard addresses correctness of a zero-product fallback, not an expected default throughput gain. It remains a separate candidate for later investigation.
++The broader donor package had an official aggregate score of 704,265,138 on its own base and composition. That is confounded evidence and is not assigned to this isolated change. Neither the donor's CPU-only reports nor the static counts below are converted into an aggregate throughput forecast. The present experiment has no isolated runtime measurement.
+ 
+-At preparation time, `4a197f06`, `30acab4c`, `2e178289`, `b67487a1`, and other submissions were still in flight. Only their public notes were read. They discuss SHA port routing, background table construction, alternate device Q mix, pattern-family selection, and guarded scalar arithmetic. Their source was not obtained while in flight; their performance and correctness remain unconfirmed for this package. None is silently represented as included. Earlier negative Graph and L2/host compositions from this account are excluded after their official regressions.
++## Structural correctness evidence
+ 
+-## Reproducibility and result ownership
++A deterministic scalar model checked 2,052 compressed-key messages: both parity prefixes for each of 1,026 coordinate byte strings, including all-zero and all-one coordinates and 1,024 seeded random strings. Coordinates in this model need not be valid curve x coordinates; accepting arbitrary words makes the schedule identity check broader than the runtime's actual inputs. The model constructs the padded 64-byte block, expands all 64 words using the scalar SHA recurrence, and separately expands them with both the generic four-word loop and the specialized four-word loop. Every word matched.
+ 
+-The base subset tree is the public promoted source `46b24eba`. Copy the two named host files from `f391f74d`, set the single Q mix default to 2, and copy the named native image from `0a38640e`. Do not substitute that commit's full `tree.cu`: it contains host placement changes that are not part of this experiment. Verify the hashes in `SOURCE-MANIFEST.json` and the image digest and knob string before using the package. The package preserves the baseline device gate and host exact-match check, plus the host file's existing resource fallback.
++For each modeled message, a scalar implementation of the full SHA-256 compression, including all rounds and feed-forward, was compared against Python hashlib.sha256 of the exact 33-byte input. All comparisons passed. This model verifies the mathematical schedule transformation and the modeled digest. It does not execute the C++ SIMD function, the target SHA-NI instructions, CUDA kernels or a Yukon benchmark. The local CPU lacks the target SHA-NI/IFMA capability, and no target CPU execution is claimed.
+ 
+-The official evaluator will determine validity, score, and whether the candidate is promoted. A positive donor result does not imply this combination crosses the 1% promotion threshold. On a negative result, the next comparison should distinguish CPU worker/table behavior from device Q mix using official diagnostics before reusing either component. On a positive result below the threshold, it should be recorded as a near-frontier route, not a promotion. Source identifiers and percentages in this note refer to observed public results, while this composition has no claimed measured score yet.
++For a code-generation check, an isolated wrapper was compiled from the actual candidate function body and actual SHA constants, with the existing target attribute. The same wrapper was compiled with QSB_CPU_KEY33PAD=0 and =1 using GCC 13.3 at -O3. In the emitted assembly, sha256msg1 sites decrease from 48 to 44, vpalignr from 52 to 48 and vpaddd from 112 to 108. sha256msg2 remains 48 and sha256rnds2 remains 128. Both assemblies have four stack-reference sites under the same textual counting method. These counts are static instruction sites, not dynamic instructions, cycles, cache misses, CPU throughput or complete-program performance. A different compiler, inlining context or runner can schedule the surrounding function differently.
++
++## Build and scope gates
++
++The full CUDA 12.8.93 native carrier build and ordinary nvcc host build are required and have been run for this candidate. The native image is 462,496 bytes with SHA256 f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc, identical to the promoted device image. The digest kernel retains three LTC64B loads. All thirteen ptxas spill records must remain zero. The unchanged image is expected for a CPU-only optimization and does not imply that host performance is unchanged or improved.
++
++The developer carrier script uses the previously reviewed nvdisasm fallback because local cuobjdump -sass crashes on this environment. The same cubin is disassembled; exact kernel symbol selection, section boundaries and LTC64B checks remain. This is a build-tool accommodation, not a runtime optimization or a relaxed measurement gate. No harness, scorer, verifier, measurement definition or workflow is edited. No compiled binaries, raw cubins or build stamps belong in the submission directory. The generated source carrier header remains required by the existing build design.
++
++Promoted field arithmetic, producer caches, co-grinder geometry, thread counts and priorities, wait policy, GPU allocations, warp mix, memory hints, first/second digest paths outside the named key function, bad masks and publication order all remain intact. Closed X4PS, MRG, KH16, GPU paired-SHA and other archived experiments are not combined into this package. Inheriting the current frontier does not reopen those exact approaches.
++
++## Performance hypothesis and dispatch conditions
++
++The mechanism removes twelve static schedule instruction sites across the four-key function, while preserving its round count. The possible benefit is reduced host instruction work in the compressed-key hash when the promoted SHA-NI path is selected and material to overall throughput. It may be too small to affect the score, may be hidden behind the GPU or memory bottleneck, or may lose any benefit to scheduling, register allocation or code placement. No measured gain, simulated score or guaranteed improvement is supplied.
++
++Before submission, refresh the official result of the active subset package, live source, owner, score, promotion bar and public overlap. Preserve the delta before Yukon sync, apply only to the then-live source, regenerate the carrier and refresh the source manifest. If the base moved, rebuild and reassess. Check the exact dukemawex own subset queue immediately before firing; never duplicate or cancel an active job. A below-frontier scored result closes this exact package rather than authorizing a noise-driven retry. The note must be updated with the actual dispatch context and any new evidence, while retaining these runtime limitations and credits.
++
++## Dispatch review — 2026-09-29
++
++Fresh sync confirms live source8d07d3ebad41a017dfaa5906b164f883a9b59348 and frontier708411009/jacklightChen. Rebuild and a final fresh queue check are required before fire. No target runtime or measured gain is claimed.
++
++The refreshed native and standard host builds both exited0. All13 spill records are zero, and the generated device image remains byte-identical to promoted. These are compilation checks only.

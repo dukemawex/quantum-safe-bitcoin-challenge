@@ -2,17 +2,24 @@
 // Only the first block depends on the epoch remainder. The second block's
 // expanded schedule is shared by every epoch with the same window choice.
 #pragma once
-#define QSB_FIRST_SLOTS 64
+#ifndef QSB_950_PACK
+#define QSB_950_PACK 1
+#endif
+#define QSB_FIRST_SLOTS (QSB_SE_WINDOWS==256?64:16)
 #ifndef QSB_SHA_UNROLL_CONST
 #define QSB_SHA_UNROLL_CONST 1
 #endif   /* first-block classes per epoch in d_first */
-__device__ uint32_t QSB_WINDOW_FIRST[14][256];
-__device__ uint32_t QSB_WINDOW_SECOND[64][256];
-__device__ uint32_t QSB_WINDOW_CLASS[256];
-__device__ uint32_t QSB_FIRST_CLASS[256];
-__device__ uint32_t QSB_FIRST_UNIQUE[14][256];
+__device__ uint32_t QSB_WINDOW_FIRST[14][QSB_SE_PER_EPOCH];
+__device__ uint32_t QSB_WINDOW_SECOND[64][QSB_SE_PER_EPOCH];
+__device__ uint32_t QSB_WINDOW_CLASS[QSB_SE_PER_EPOCH];
+__device__ uint32_t QSB_FIRST_CLASS[QSB_SE_PER_EPOCH];
+/* Public PR950: lossless (first_slot << 16) | second_slot. */
+__device__ uint32_t QSB_LANE_CLASS[QSB_SE_PER_EPOCH];
+__device__ uint32_t QSB_FIRST_UNIQUE[14][QSB_SE_WINDOWS==256?256:QSB_FIRST_SLOTS];
 __device__ __constant__ int QSB_FIRST_COUNT;
 static int qsb_first_class_count=0;
+/* Host copy of the distinct first-block words (words 2..15 per class), kept for the host producers. */
+static uint32_t qsb_first_unique_host[QSB_FIRST_SLOTS][14];
 
 static uint32_t qsb_window_second_key(const uint8_t w[3]) {
     uint32_t key=0;
@@ -29,14 +36,14 @@ static uint32_t qsb_window_first_key(const uint8_t w[3]) {
 }
 
 static int qsb_prepare_window_schedule(const uint8_t *rows,
-        const uint8_t windows[256][3], const uint32_t *constant) {
-    uint32_t first[14][256], second[64][256]={}, round_k[64];
-    uint32_t classes[256], unique[256][16];
-    uint32_t first_classes[256], first_unique[256][14], transposed[14][256]={};
+        const uint8_t windows[QSB_SE_PER_EPOCH][3], const uint32_t *constant) {
+    uint32_t first[14][QSB_SE_PER_EPOCH], second[64][QSB_SE_PER_EPOCH]={}, round_k[64];
+    uint32_t classes[QSB_SE_PER_EPOCH], unique[QSB_SE_PER_EPOCH][16];
+    uint32_t first_classes[QSB_SE_PER_EPOCH], first_unique[QSB_SE_PER_EPOCH][14], transposed[14][QSB_SE_WINDOWS==256?256:QSB_FIRST_SLOTS]={};
     int first_distinct=0;
     int distinct=0;
-    if (cudaMemcpyFromSymbol(round_k, K, sizeof(round_k)) != cudaSuccess) return 1;
-    for (int lane=0; lane<256; lane++) {
+    if (QSB_FROM_SYMBOL(round_k, K, sizeof(round_k)) != cudaSuccess) return 1;
+    for (int lane=0; lane<QSB_SE_PER_EPOCH; lane++) {
         uint8_t bytes[128]={};
         int pos=8, sel=0;
         for (int i=137; i<150; i++) {
@@ -69,17 +76,25 @@ static int qsb_prepare_window_schedule(const uint8_t *rows,
         }
         for (int j=0; j<64; j++) second[j][slot]=expanded[j]+round_k[j];
     }
-    printf("Window schedule classes: first=%d second=%d of 256\n",first_distinct,distinct);
+    printf("Window schedule classes: first=%d second=%d of %d\n",first_distinct,distinct,QSB_SE_PER_EPOCH);
     qsb_first_class_count=first_distinct;
     if(first_distinct>QSB_FIRST_SLOTS)return 1;
+    for(int slot=0;slot<first_distinct;slot++)memcpy(qsb_first_unique_host[slot],first_unique[slot],56);
     for(int slot=0;slot<first_distinct;slot++)
         for(int j=0;j<14;j++)transposed[j][slot]=first_unique[slot][j];
-    if(cudaMemcpyToSymbol(QSB_FIRST_COUNT,&first_distinct,sizeof(first_distinct))!=cudaSuccess)return 1;
-    if(cudaMemcpyToSymbol(QSB_FIRST_CLASS,first_classes,sizeof(first_classes))!=cudaSuccess)return 1;
-    if(cudaMemcpyToSymbol(QSB_FIRST_UNIQUE,transposed,sizeof(transposed))!=cudaSuccess)return 1;
-    if (cudaMemcpyToSymbol(QSB_WINDOW_CLASS,classes,sizeof(classes))!=cudaSuccess) return 1;
-    if (cudaMemcpyToSymbol(QSB_WINDOW_FIRST,first,sizeof(first))!=cudaSuccess) return 1;
-    return cudaMemcpyToSymbol(QSB_WINDOW_SECOND,second,sizeof(second))==cudaSuccess?0:1;
+    if(QSB_TO_SYMBOL(QSB_FIRST_COUNT,&first_distinct,sizeof(first_distinct))!=cudaSuccess)return 1;
+    if(QSB_TO_SYMBOL(QSB_FIRST_CLASS,first_classes,sizeof(first_classes))!=cudaSuccess)return 1;
+    if(QSB_TO_SYMBOL(QSB_FIRST_UNIQUE,transposed,sizeof(transposed))!=cudaSuccess)return 1;
+#if QSB_950_PACK
+    {   uint32_t packed[QSB_SE_PER_EPOCH];
+        for(int lane=0;lane<QSB_SE_PER_EPOCH;lane++)
+            packed[lane]=(first_classes[lane]<<16)|classes[lane];
+        if(QSB_TO_SYMBOL(QSB_LANE_CLASS,packed,sizeof(packed))!=cudaSuccess)return 1;
+    }
+#endif
+    if (QSB_TO_SYMBOL(QSB_WINDOW_CLASS,classes,sizeof(classes))!=cudaSuccess) return 1;
+    if (QSB_TO_SYMBOL(QSB_WINDOW_FIRST,first,sizeof(first))!=cudaSuccess) return 1;
+    return QSB_TO_SYMBOL(QSB_WINDOW_SECOND,second,sizeof(second))==cudaSuccess?0:1;
 }
 
 /* First-block states for every (epoch, class) of a launch, computed as its own
@@ -159,22 +174,65 @@ __device__ __forceinline__ void qsb_scheduled_window_hash(uint32_t *state,
 }
 
 #if ZLAB_DUAL_EPOCH_SHA
+#ifndef QSB_PAIR_SHA_UNROLL_WINDOW
+#define QSB_PAIR_SHA_UNROLL_WINDOW 1
+#endif
 #ifndef QSB_PAIR_SHA_UNROLL_CONST
 #define QSB_PAIR_SHA_UNROLL_CONST 1
+#endif
+/* Keep the four-block loop unrolled; roll only its 8-round inner loop. */
+#ifndef QSB_PAIR_SHA_UNROLL_CONST_INNER
+#define QSB_PAIR_SHA_UNROLL_CONST_INNER 0
 #endif
 /* Paired epoch SHA from dukemawex 4cea5476 (origin e771d5c7 / e9812a9). The paired consumer has the same lane (and therefore the same scheduled
  * second block and constant suffix) in both epochs.  Load each schedule word
  * once and advance two independent SHA-256 states with it. */
+/* QSB_PAIR_SHA_ALU_ADD (kill switch): the paired epoch SHA (window block and the four
+ * constant-suffix blocks) runs beside the IMAD-bound chain loop, and ptxas lowers each round's
+ * two-input d += t1 to IMAD.IADD on the FMA-heavy pipe. A constant-bank zero addend makes it a
+ * three-input add that only IADD3 (ALU pipe) can issue: same instruction count, exact
+ * (x + y + 0 = x + y mod 2^32). QSB_SHA_ALU_ADD's trick, applied to the paired path it does not
+ * cover. (h = t1 + t2 already fuses into one IADD3.) 0 = S2Round unchanged. */
+#ifndef QSB_PAIR_SHA_ALU_ADD
+#define QSB_PAIR_SHA_ALU_ADD 1
+#endif
+#if QSB_PAIR_SHA_ALU_ADD
+__device__ __constant__ uint32_t qsb_pair_zero_add = 0;   /* always 0 */
+#define QSB_P2R(a, b, c, d, e, f, g, h, k, w) \
+    t1 = h + S1(e) + Ch(e,f,g) + k + (w); \
+    t2 = S0(a) + Maj(a,b,c); \
+    d += t1 + qsb_pair_zero_add; \
+    h = t1 + t2;
+#else
+#define QSB_P2R(a, b, c, d, e, f, g, h, k, w) S2Round(a, b, c, d, e, f, g, h, k, w)
+#endif
 __device__ __forceinline__ void qsb_scheduled_window_hash_pair(
     uint32_t *stateA, uint32_t *stateB, int lane,
     const uint32_t *firstA, const uint32_t *firstB) {
+#if QSB_950_PACK
+    const uint32_t lane_rec=QSB_LANE_CLASS[lane];
+    const int first_slot=(int)(lane_rec>>16);
+    const int slot=(int)(lane_rec&0xffffu);
+#else
     const int first_slot=QSB_FIRST_CLASS[lane];
     const int slot=QSB_WINDOW_CLASS[lane];
+#endif
+#if QSB_950_PACK
+    {   const uint4 *pA=reinterpret_cast<const uint4*>(firstA+first_slot*8);
+        const uint4 *pB=reinterpret_cast<const uint4*>(firstB+first_slot*8);
+        const uint4 vA0=pA[0], vA1=pA[1], vB0=pB[0], vB1=pB[1];
+        stateA[0]=vA0.x;stateA[1]=vA0.y;stateA[2]=vA0.z;stateA[3]=vA0.w;
+        stateA[4]=vA1.x;stateA[5]=vA1.y;stateA[6]=vA1.z;stateA[7]=vA1.w;
+        stateB[0]=vB0.x;stateB[1]=vB0.y;stateB[2]=vB0.z;stateB[3]=vB0.w;
+        stateB[4]=vB1.x;stateB[5]=vB1.y;stateB[6]=vB1.z;stateB[7]=vB1.w;
+    }
+#else
     #pragma unroll
     for(int j=0;j<8;j++){
         stateA[j]=firstA[first_slot*8+j];
         stateB[j]=firstB[first_slot*8+j];
     }
+#endif
     uint32_t a0,b0,c0,d0,e0,f0,g0,h0;
     uint32_t a1,b1,c1,d1,e1,f1,g1,h1,t1,t2;
 #define QSB_PAIR_STATE_LOAD() do { \
@@ -190,16 +248,20 @@ __device__ __forceinline__ void qsb_scheduled_window_hash_pair(
     stateB[4]+=e1;stateB[5]+=f1;stateB[6]+=g1;stateB[7]+=h1; \
 } while(0)
     QSB_PAIR_STATE_LOAD();
+#if QSB_PAIR_SHA_UNROLL_WINDOW   /* exact: same rounds, no loop counter, loads can be hoisted */
+    #pragma unroll
+#else
     #pragma unroll 1
+#endif
     for(int r=0;r<64;r+=8){
-        {const uint32_t w=QSB_WINDOW_SECOND[r][slot];S2Round(a0,b0,c0,d0,e0,f0,g0,h0,0,w);S2Round(a1,b1,c1,d1,e1,f1,g1,h1,0,w);}
-        {const uint32_t w=QSB_WINDOW_SECOND[r+1][slot];S2Round(h0,a0,b0,c0,d0,e0,f0,g0,0,w);S2Round(h1,a1,b1,c1,d1,e1,f1,g1,0,w);}
-        {const uint32_t w=QSB_WINDOW_SECOND[r+2][slot];S2Round(g0,h0,a0,b0,c0,d0,e0,f0,0,w);S2Round(g1,h1,a1,b1,c1,d1,e1,f1,0,w);}
-        {const uint32_t w=QSB_WINDOW_SECOND[r+3][slot];S2Round(f0,g0,h0,a0,b0,c0,d0,e0,0,w);S2Round(f1,g1,h1,a1,b1,c1,d1,e1,0,w);}
-        {const uint32_t w=QSB_WINDOW_SECOND[r+4][slot];S2Round(e0,f0,g0,h0,a0,b0,c0,d0,0,w);S2Round(e1,f1,g1,h1,a1,b1,c1,d1,0,w);}
-        {const uint32_t w=QSB_WINDOW_SECOND[r+5][slot];S2Round(d0,e0,f0,g0,h0,a0,b0,c0,0,w);S2Round(d1,e1,f1,g1,h1,a1,b1,c1,0,w);}
-        {const uint32_t w=QSB_WINDOW_SECOND[r+6][slot];S2Round(c0,d0,e0,f0,g0,h0,a0,b0,0,w);S2Round(c1,d1,e1,f1,g1,h1,a1,b1,0,w);}
-        {const uint32_t w=QSB_WINDOW_SECOND[r+7][slot];S2Round(b0,c0,d0,e0,f0,g0,h0,a0,0,w);S2Round(b1,c1,d1,e1,f1,g1,h1,a1,0,w);}
+        {const uint32_t w=QSB_WINDOW_SECOND[r][slot];QSB_P2R(a0,b0,c0,d0,e0,f0,g0,h0,0,w);QSB_P2R(a1,b1,c1,d1,e1,f1,g1,h1,0,w);}
+        {const uint32_t w=QSB_WINDOW_SECOND[r+1][slot];QSB_P2R(h0,a0,b0,c0,d0,e0,f0,g0,0,w);QSB_P2R(h1,a1,b1,c1,d1,e1,f1,g1,0,w);}
+        {const uint32_t w=QSB_WINDOW_SECOND[r+2][slot];QSB_P2R(g0,h0,a0,b0,c0,d0,e0,f0,0,w);QSB_P2R(g1,h1,a1,b1,c1,d1,e1,f1,0,w);}
+        {const uint32_t w=QSB_WINDOW_SECOND[r+3][slot];QSB_P2R(f0,g0,h0,a0,b0,c0,d0,e0,0,w);QSB_P2R(f1,g1,h1,a1,b1,c1,d1,e1,0,w);}
+        {const uint32_t w=QSB_WINDOW_SECOND[r+4][slot];QSB_P2R(e0,f0,g0,h0,a0,b0,c0,d0,0,w);QSB_P2R(e1,f1,g1,h1,a1,b1,c1,d1,0,w);}
+        {const uint32_t w=QSB_WINDOW_SECOND[r+5][slot];QSB_P2R(d0,e0,f0,g0,h0,a0,b0,c0,0,w);QSB_P2R(d1,e1,f1,g1,h1,a1,b1,c1,0,w);}
+        {const uint32_t w=QSB_WINDOW_SECOND[r+6][slot];QSB_P2R(c0,d0,e0,f0,g0,h0,a0,b0,0,w);QSB_P2R(c1,d1,e1,f1,g1,h1,a1,b1,0,w);}
+        {const uint32_t w=QSB_WINDOW_SECOND[r+7][slot];QSB_P2R(b0,c0,d0,e0,f0,g0,h0,a0,0,w);QSB_P2R(b1,c1,d1,e1,f1,g1,h1,a1,0,w);}
     }
     QSB_PAIR_STATE_ADD();
 #if QSB_PAIR_SHA_UNROLL_CONST
@@ -209,20 +271,20 @@ __device__ __forceinline__ void qsb_scheduled_window_hash_pair(
 #endif
     for(int block=0;block<4;block++){
         QSB_PAIR_STATE_LOAD();
-#if QSB_PAIR_SHA_UNROLL_CONST
+#if QSB_PAIR_SHA_UNROLL_CONST_INNER
         #pragma unroll
 #else
         #pragma unroll 1
 #endif
         for(int r=0;r<64;r+=8){
-            {const uint32_t w=QSB_CONST_SCHEDULE[block][r];S2Round(a0,b0,c0,d0,e0,f0,g0,h0,0,w);S2Round(a1,b1,c1,d1,e1,f1,g1,h1,0,w);}
-            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+1];S2Round(h0,a0,b0,c0,d0,e0,f0,g0,0,w);S2Round(h1,a1,b1,c1,d1,e1,f1,g1,0,w);}
-            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+2];S2Round(g0,h0,a0,b0,c0,d0,e0,f0,0,w);S2Round(g1,h1,a1,b1,c1,d1,e1,f1,0,w);}
-            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+3];S2Round(f0,g0,h0,a0,b0,c0,d0,e0,0,w);S2Round(f1,g1,h1,a1,b1,c1,d1,e1,0,w);}
-            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+4];S2Round(e0,f0,g0,h0,a0,b0,c0,d0,0,w);S2Round(e1,f1,g1,h1,a1,b1,c1,d1,0,w);}
-            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+5];S2Round(d0,e0,f0,g0,h0,a0,b0,c0,0,w);S2Round(d1,e1,f1,g1,h1,a1,b1,c1,0,w);}
-            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+6];S2Round(c0,d0,e0,f0,g0,h0,a0,b0,0,w);S2Round(c1,d1,e1,f1,g1,h1,a1,b1,0,w);}
-            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+7];S2Round(b0,c0,d0,e0,f0,g0,h0,a0,0,w);S2Round(b1,c1,d1,e1,f1,g1,h1,a1,0,w);}
+            {const uint32_t w=QSB_CONST_SCHEDULE[block][r];QSB_P2R(a0,b0,c0,d0,e0,f0,g0,h0,0,w);QSB_P2R(a1,b1,c1,d1,e1,f1,g1,h1,0,w);}
+            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+1];QSB_P2R(h0,a0,b0,c0,d0,e0,f0,g0,0,w);QSB_P2R(h1,a1,b1,c1,d1,e1,f1,g1,0,w);}
+            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+2];QSB_P2R(g0,h0,a0,b0,c0,d0,e0,f0,0,w);QSB_P2R(g1,h1,a1,b1,c1,d1,e1,f1,0,w);}
+            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+3];QSB_P2R(f0,g0,h0,a0,b0,c0,d0,e0,0,w);QSB_P2R(f1,g1,h1,a1,b1,c1,d1,e1,0,w);}
+            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+4];QSB_P2R(e0,f0,g0,h0,a0,b0,c0,d0,0,w);QSB_P2R(e1,f1,g1,h1,a1,b1,c1,d1,0,w);}
+            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+5];QSB_P2R(d0,e0,f0,g0,h0,a0,b0,c0,0,w);QSB_P2R(d1,e1,f1,g1,h1,a1,b1,c1,0,w);}
+            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+6];QSB_P2R(c0,d0,e0,f0,g0,h0,a0,b0,0,w);QSB_P2R(c1,d1,e1,f1,g1,h1,a1,b1,0,w);}
+            {const uint32_t w=QSB_CONST_SCHEDULE[block][r+7];QSB_P2R(b0,c0,d0,e0,f0,g0,h0,a0,0,w);QSB_P2R(b1,c1,d1,e1,f1,g1,h1,a1,0,w);}
         }
         QSB_PAIR_STATE_ADD();
     }

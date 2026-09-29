@@ -1,0 +1,76 @@
+{
+  "model": {
+    "four_state_cases": 20005,
+    "scope": "exact 32-bit wrap and original unpack ordering; no SHA-NI execution",
+    "runtime_measured": false
+  },
+  "static": {
+    "0": {
+      "instructions": {
+        "endbr64": 1,
+        "movzbl": 4,
+        "movdqu": 8,
+        "movdqa": 143,
+        "sall": 8,
+        "andl": 4,
+        "pshufb": 8,
+        "orl": 8,
+        "movd": 8,
+        "movl": 3,
+        "palignr": 52,
+        "por": 4,
+        "paddd": 112,
+        "sha256msg1": 48,
+        "sha256rnds2": 128,
+        "pshufd": 60,
+        "sha256msg2": 48,
+        "movq": 1,
+        "movaps": 2,
+        "punpckhdq": 2,
+        "punpckhqdq": 1,
+        "ret": 1
+      },
+      "stack_references": 4
+    },
+    "1": {
+      "instructions": {
+        "endbr64": 1,
+        "movzbl": 4,
+        "movdqu": 8,
+        "movdqa": 141,
+        "sall": 8,
+        "andl": 4,
+        "orl": 8,
+        "palignr": 52,
+        "pshufb": 8,
+        "movd": 8,
+        "movl": 3,
+        "por": 4,
+        "paddd": 109,
+        "sha256msg1": 48,
+        "sha256rnds2": 128,
+        "pshufd": 60,
+        "sha256msg2": 48,
+        "movq": 1,
+        "movaps": 1,
+        "punpckhdq": 2,
+        "punpckhqdq": 1,
+        "ret": 1
+      },
+      "stack_references": 2
+    }
+  },
+  "build": {
+    "native_exit": 0,
+    "host_exit": 0,
+    "cuda": "12.8.93",
+    "spill_records": 13,
+    "spill_stores": 0,
+    "spill_loads": 0,
+    "ltc64b": 3,
+    "cubin_bytes": 462496,
+    "cubin_sha256": "f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc",
+    "raw_log": "/tmp/tmp.M5w4dkWByl/ptxas.log"
+  },
+  "runtime_measured": false
+}

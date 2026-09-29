@@ -1,0 +1,23 @@
+{
+  "messages": 1026,
+  "checks": [
+    "32-byte serialization",
+    "grouped SHA-NI schedule semantics with two elisions",
+    "64 schedule words vs scalar recurrence",
+    "full scalar digest vs hashlib"
+  ],
+  "base": {
+    "sha256msg1": 48,
+    "sha256msg2": 48,
+    "sha256rnds2": 128,
+    "vpalignr": 52,
+    "vpaddd": 120
+  },
+  "pad": {
+    "sha256msg1": 44,
+    "sha256msg2": 48,
+    "sha256rnds2": 128,
+    "vpalignr": 48,
+    "vpaddd": 108
+  }
+}

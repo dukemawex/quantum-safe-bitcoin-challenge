@@ -1,0 +1,48 @@
+{
+  "source_ref": "ff27a2b66990a3eb554a1d4453e896c0397337ba",
+  "tracks": {
+    "subset": {
+      "benchmark_id": "eafd2f3d-e64f-49c1-b98a-6b825b0cdc82",
+      "sourceRef": "ff27a2b66990a3eb554a1d4453e896c0397337ba",
+      "status": "open",
+      "currentBestScore": 728337167,
+      "own_count": 16,
+      "own_active": []
+    },
+    "pinning": {
+      "benchmark_id": "b352879c-669f-44ef-98cd-ad3d34d0fefa",
+      "sourceRef": "ff27a2b66990a3eb554a1d4453e896c0397337ba",
+      "status": "open",
+      "currentBestScore": 1008206828,
+      "own_count": 55,
+      "own_active": []
+    }
+  },
+  "frontier_submission": {
+    "id": "fb6f5a8f-b29e-4506-a50c-c79a9c5a2a0e",
+    "solverUsername": "cefika",
+    "status": "accepted",
+    "officialScore": 728337167,
+    "officialMetrics": {
+      "gpu": "RTX_4090",
+      "mode": "fixed_time",
+      "unit": "verified candidates per second",
+      "bench": "subset",
+      "verified": true,
+      "direction": "higher is better",
+      "elapsed_s": 1201.9526,
+      "candidates": 875426742272,
+      "hits_per_s": 86.824555,
+      "problem_seed": 816459995,
+      "verified_hits": 104359,
+      "throughput_Mps": 728.337167,
+      "leading_zero_bits": 24,
+      "hit_relative_variance": 0.003096,
+      "candidates_self_reported": 1023326417055
+    },
+    "promotionFinishedAt": "2026-09-29T15:14:57.729Z",
+    "submissionCommitSha": "ff27a2b66990a3eb554a1d4453e896c0397337ba",
+    "promotedSourceRef": "ff27a2b66990a3eb554a1d4453e896c0397337ba"
+  },
+  "recorded_at": "2026-09-29T16:44:29Z"
+}
