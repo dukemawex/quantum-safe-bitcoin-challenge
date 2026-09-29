@@ -1,0 +1,61 @@
+diff --git a/candidates/subset/CpuGrindSubset.h b/candidates/subset/CpuGrindSubset.h
+index c166f17..cf5a123 100644
+--- a/candidates/subset/CpuGrindSubset.h
++++ b/candidates/subset/CpuGrindSubset.h
+@@ -2267,6 +2267,9 @@ QSHA static __m128i qsha_keyhash4_h0(const fe *qx, const uint8_t *qp) {
+ /* QSB_CPU_KH16 (a33e04c3): h0 of SHA-256 of the 16 keys whose message words W0..W8 are m[0..8] (lane = key); wk: 32 x 32 dwords of
+  * scratch. Returns the prefilter mask of the 16 keys (bit k = key k's h0 has QSB_ZEROS_N leading zero bits). h0_out (dev builds
+  * only, never in a ranked build): the 16 h0 values for the unit test. */
++#ifndef QSB_CPU_KH16_H0PACK4
++#define QSB_CPU_KH16_H0PACK4 1 /* pack four H0 outputs before one aligned store */
++#endif
+ QSHA16 static unsigned kh16_pass(const uint32_t *m, uint32_t *wk
+ #ifdef QSB_CPU_DEVBENCH
+                                  , uint32_t *h0_out = nullptr
+@@ -2322,8 +2325,15 @@ QSHA16 static unsigned kh16_pass(const uint32_t *m, uint32_t *wk
+ #pragma GCC unroll 4
+             for (int e = 0; e < 4; e++) S0[e] = _mm_sha256rnds2_epu32(S0[e], S1[e], _mm_loadl_epi64((const __m128i *)(base[e] + 64 * r + 32)));
+         }
++#if QSB_CPU_KH16_H0PACK4
++        const __m128i a0 = _mm_add_epi32(S0[0], IV0), a1 = _mm_add_epi32(S0[1], IV0);
++        const __m128i a2 = _mm_add_epi32(S0[2], IV0), a3 = _mm_add_epi32(S0[3], IV0);
++        const __m128i h01 = _mm_unpackhi_epi32(a0, a1), h23 = _mm_unpackhi_epi32(a2, a3);
++        _mm_store_si128((__m128i *)(h0 + 4 * L), _mm_unpackhi_epi64(h01, h23));
++#else
+ #pragma GCC unroll 4
+         for (int e = 0; e < 4; e++) h0[4 * L + e] = (uint32_t)_mm_extract_epi32(_mm_add_epi32(S0[e], IV0), 3);
++#endif
+     }
+ #ifdef QSB_CPU_DEVBENCH
+     if (h0_out) memcpy(h0_out, h0, sizeof h0);
+diff --git a/candidates/subset/build_carrier.sh b/candidates/subset/build_carrier.sh
+index be1213f..4c9c703 100755
+--- a/candidates/subset/build_carrier.sh
++++ b/candidates/subset/build_carrier.sh
+@@ -28,7 +28,10 @@ fi
+ "$NVCC" -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin ${QSB_CARRIER_NVCC_FLAGS:-} \
+      -Xptxas -v -o "$W/c.cubin" subset.cu 2> "$W/ptxas.log"
+ "$CUOBJDUMP" -symbols "$W/c.cubin" > "$W/symbols.txt"
+-"$CUOBJDUMP" -sass "$W/c.cubin" > "$W/sass.txt"
++if ! "$CUOBJDUMP" -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump disassembly failed; checking the same cubin with nvdisasm" >&2
++    "$(dirname "$(command -v "$NVCC")")/nvdisasm" "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, glob, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -57,8 +60,12 @@ for g in ("qsb_carrier_knobs", "QSB_CONST_SCHEDULE", "QSB_U2R", "QSB_U2R_ISO", "
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the digest kernel (the only table reader on the search path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-dig = [b for b in fn if b.startswith(names[3])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    dig = [b for b in fn if b.startswith(names[3] + "\n") or b.startswith(names[3] + " ")]
++else:
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    dig = [sections[i + 1] for i in range(1, len(sections) - 1, 2) if sections[i] == names[3]]
+ if not dig or "LTC64B" not in dig[0]:
+     sys.exit("build_carrier: digest kernel has no LTC64B load")
+ n_hint = dig[0].count("LTC64B")
