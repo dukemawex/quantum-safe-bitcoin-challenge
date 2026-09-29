@@ -1,0 +1,25 @@
+{
+  "id": "1e3483fd-cc00-41bb-9e83-1afd0ce504c0",
+  "status": "rejected",
+  "createdAt": "2026-09-29T18:28:22.450Z",
+  "updatedAt": "2026-09-29T19:55:21.151Z",
+  "officialScore": 989216415,
+  "officialMetrics": {
+    "gpu": "RTX_4090",
+    "mode": "fixed_time",
+    "unit": "verified candidates per second",
+    "bench": "pinning",
+    "verified": true,
+    "direction": "higher is better",
+    "elapsed_s": 1201.0724,
+    "candidates": 1188120494080,
+    "hits_per_s": 117.923782,
+    "problem_seed": 302713989,
+    "verified_hits": 141635,
+    "throughput_Mps": 989.216415,
+    "leading_zero_bits": 24,
+    "hit_relative_variance": 0.002657,
+    "candidates_self_reported": 1218599202321
+  },
+  "rejectionReason": "score did not improve current best"
+}

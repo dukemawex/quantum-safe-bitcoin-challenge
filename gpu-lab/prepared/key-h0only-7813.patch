@@ -1,0 +1,93 @@
+diff --git a/candidates/pinning/build_carrier.sh b/candidates/pinning/build_carrier.sh
+index 7a2b6a6..219ee5f 100755
+--- a/candidates/pinning/build_carrier.sh
++++ b/candidates/pinning/build_carrier.sh
+@@ -10,7 +10,10 @@ W=$(mktemp -d)   # logs and the raw cubin stay out of the submission directory
+ nvcc -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin \
+      -Xptxas -v -o "$W/c.cubin" pinning.cu 2> "$W/ptxas.log"
+ cuobjdump -symbols "$W/c.cubin" > "$W/symbols.txt"
+-cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"
++if ! cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump disassembly failed; checking the same cubin with nvdisasm" >&2
++    nvdisasm "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -44,8 +47,13 @@ for g in ("qsb_carrier_zeros", "pin_u2rx_words", "pin_u2ry_words", "pin_iso_invu
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the prepare kernel (the only table reader on the hot path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-s0 = [b for b in fn if b.startswith(names[0])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    s0 = [b for b in fn if b.startswith(names[0] + "\n") or b.startswith(names[0] + " ")]
++else:
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    s0 = [sections[i + 1] for i in range(1, len(sections) - 1, 2)
++          if sections[i] == names[0]]
+ if not s0 or "LTC64B" not in s0[0]:
+     sys.exit("build_carrier: prepare kernel has no LDG.E.LTC64B load")
+ n_hint = s0[0].count("LTC64B")
+diff --git a/candidates/pinning/cg_ec_scalar.h b/candidates/pinning/cg_ec_scalar.h
+index ad92ee9..efc2ec9 100644
+--- a/candidates/pinning/cg_ec_scalar.h
++++ b/candidates/pinning/cg_ec_scalar.h
+@@ -189,6 +189,9 @@ __attribute__((target("sha,sse4.1"), noinline)) static void pub_hash8_shani(cons
+ }
+ 
+ /* word-major variant (Wt[j][k] = word j of key k), used by the AVX2 EC stage on SHA-NI hosts */
++#ifndef QSB_CG_KEY_H0ONLY
++#define QSB_CG_KEY_H0ONLY 1 /* retain only H0 after all compression rounds */
++#endif
+ __attribute__((target("sha,sse4.1"), noinline)) static void pub_hash8_shani_wm(const uint32_t Wt[9][8], uint32_t h0[8]) {
+     using namespace qcg_sha;
+     for (int k = 0; k < 8; k += 2) {
+@@ -197,7 +200,11 @@ __attribute__((target("sha,sse4.1"), noinline)) static void pub_hash8_shani_wm(c
+         for (int j = 9; j < 15; j++) { wa[j] = 0; wb[j] = 0; }
+         wa[15] = 264; wb[15] = 264;
+         memcpy(sa, IV256, 32); memcpy(sb, IV256, 32);
++#if QSB_CG_KEY_H0ONLY
++        shani_compress2_h0(sa, wa, sb, wb);
++#else
+         shani_compress2(sa, wa, sb, wb);
++#endif
+         h0[k] = sa[0]; h0[k + 1] = sb[0];
+     }
+ }
+diff --git a/candidates/pinning/cg_sha.h b/candidates/pinning/cg_sha.h
+index b7283d0..19d6dcd 100644
+--- a/candidates/pinning/cg_sha.h
++++ b/candidates/pinning/cg_sha.h
+@@ -160,7 +160,8 @@ static QSB_SHA_NI void shani_store_state(uint32_t *st, __m128i S0, __m128i S1) {
+     _mm_storeu_si128((__m128i *)&st[0], S0);
+     _mm_storeu_si128((__m128i *)&st[4], S1);
+ }
+-static QSB_SHA_NI void shani_compress2(uint32_t *stA, const uint32_t *wA, uint32_t *stB, const uint32_t *wB) {
++template<bool H0_ONLY>
++static QSB_SHA_NI void shani_compress2_impl(uint32_t *stA, const uint32_t *wA, uint32_t *stB, const uint32_t *wB) {
+     __m128i A0, A1, B0, B1;
+     shani_load_state(stA, A0, A1); shani_load_state(stB, B0, B1);
+     const __m128i A0s = A0, A1s = A1, B0s = B0, B1s = B1;
+@@ -203,9 +204,20 @@ static QSB_SHA_NI void shani_compress2(uint32_t *stA, const uint32_t *wA, uint32
+ #undef SHANI2_TAIL
+ #undef SHANI2_MSG2
+ #undef SHANI2_MSG1
++    if constexpr (H0_ONLY) {
++        stA[0] += (uint32_t)_mm_extract_epi32(A0, 3);
++        stB[0] += (uint32_t)_mm_extract_epi32(B0, 3);
++    } else {
+     A0 = _mm_add_epi32(A0, A0s); A1 = _mm_add_epi32(A1, A1s);
+     B0 = _mm_add_epi32(B0, B0s); B1 = _mm_add_epi32(B1, B1s);
+     shani_store_state(stA, A0, A1); shani_store_state(stB, B0, B1);
++    }
++}
++static QSB_SHA_NI void shani_compress2(uint32_t *stA, const uint32_t *wA, uint32_t *stB, const uint32_t *wB) {
++    shani_compress2_impl<false>(stA, wA, stB, wB);
++}
++static QSB_SHA_NI void shani_compress2_h0(uint32_t *stA, const uint32_t *wA, uint32_t *stB, const uint32_t *wB) {
++    shani_compress2_impl<true>(stA, wA, stB, wB);
+ }
+ /* single compression (tests only) */
+ static QSB_SHA_NI void shani_compress1(uint32_t *st, const uint32_t *w) {

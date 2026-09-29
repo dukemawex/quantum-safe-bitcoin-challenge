@@ -1,0 +1,73 @@
+diff --git a/candidates/pinning/build_carrier.sh b/candidates/pinning/build_carrier.sh
+index 25c0849..6f0cb60 100755
+--- a/candidates/pinning/build_carrier.sh
++++ b/candidates/pinning/build_carrier.sh
+@@ -10,7 +10,10 @@ W=$(mktemp -d)   # logs and the raw cubin stay out of the submission directory
+ nvcc -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin \
+      -Xptxas -v -o "$W/c.cubin" pinning.cu 2> "$W/ptxas.log"
+ cuobjdump -symbols "$W/c.cubin" > "$W/symbols.txt"
+-cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"
++if ! cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump disassembly failed; checking the same cubin with nvdisasm" >&2
++    nvdisasm "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -42,8 +45,13 @@ for g in ("qsb_carrier_zeros", "pin_u2rx_words", "pin_u2ry_words", "pin_iso_invu
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the prepare kernel (the only table reader on the hot path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-s0 = [b for b in fn if b.startswith(names[0])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    s0 = [b for b in fn if b.startswith(names[0] + "\n") or b.startswith(names[0] + " ")]
++else:
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    s0 = [sections[i + 1] for i in range(1, len(sections) - 1, 2)
++          if sections[i] == names[0]]
+ if not s0 or "LTC64B" not in s0[0]:
+     sys.exit("build_carrier: prepare kernel has no LDG.E.LTC64B load")
+ n_hint = s0[0].count("LTC64B")
+diff --git a/candidates/pinning/cofactor_checkpoint.h b/candidates/pinning/cofactor_checkpoint.h
+index 480dd51..a02ccd9 100644
+--- a/candidates/pinning/cofactor_checkpoint.h
++++ b/candidates/pinning/cofactor_checkpoint.h
+@@ -47,6 +47,18 @@
+ #endif
+ #if QSB_TOP16_SC
+ #define QSB_TOP16_MUL qsb_field_mul_sc
++
++/* The two remaining carry-complete products in qsb_cofactor_top5v feed only
++ * later full-reduction products, never a returned leaf inverse.  Use the same
++ * congruent short-carry representative as the rest of the tree. */
++#ifndef QSB_T5V_SC
++#define QSB_T5V_SC 1
++#endif
++#if QSB_T5V_SC
++#define QSB_T5V_MUL qsb_field_mul_sc
++#else
++#define QSB_T5V_MUL qsb_field_mul
++#endif
+ #else
+ #define QSB_TOP16_MUL qsb_field_mul
+ #endif
+@@ -664,7 +676,7 @@ template<int W,int N,int WARP=0> __device__ __forceinline__ void qsb_t5v_wave(ui
+         if(kind) {
+             uint64_t a[5],b[5],o[5];
+             qsb_tv_ld(a,T,ia);qsb_tv_ld(b,T,ib);
+-            qsb_field_mul(o,a,b);
++            QSB_T5V_MUL(o,a,b);
+             if(W==4 && kind==3u) {
+                 #pragma unroll
+                 for(int k=0;k<4;k++)roots[(size_t)blockIdx.x*4+k]=o[k];
+@@ -796,7 +808,7 @@ template<int N> __device__ __forceinline__ void qsb_cofactor_top5v(
+     uint64_t g[5],e64[5];
+     qsb_tv_ld(g,T,16u*QSB_GF_P(tid^(N/2)));
+     qsb_tv_ld(e64,T,16u*QSB_GF_E(tid&(N/2-1)));
+-    qsb_field_mul(value,g,e64);
++    QSB_T5V_MUL(value,g,e64);
+     value[4]=0;
+ }
+ #endif /* QSB_POST_GLUE & 1 */

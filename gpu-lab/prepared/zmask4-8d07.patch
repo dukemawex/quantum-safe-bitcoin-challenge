@@ -1,0 +1,53 @@
+diff --git a/candidates/pinning/build_carrier.sh b/candidates/pinning/build_carrier.sh
+index 7a2b6a6..219ee5f 100755
+--- a/candidates/pinning/build_carrier.sh
++++ b/candidates/pinning/build_carrier.sh
+@@ -10,7 +10,10 @@ W=$(mktemp -d)   # logs and the raw cubin stay out of the submission directory
+ nvcc -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin \
+      -Xptxas -v -o "$W/c.cubin" pinning.cu 2> "$W/ptxas.log"
+ cuobjdump -symbols "$W/c.cubin" > "$W/symbols.txt"
+-cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"
++if ! cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump disassembly failed; checking the same cubin with nvdisasm" >&2
++    nvdisasm "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -44,8 +47,13 @@ for g in ("qsb_carrier_zeros", "pin_u2rx_words", "pin_u2ry_words", "pin_iso_invu
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the prepare kernel (the only table reader on the hot path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-s0 = [b for b in fn if b.startswith(names[0])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    s0 = [b for b in fn if b.startswith(names[0] + "\n") or b.startswith(names[0] + " ")]
++else:
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    s0 = [sections[i + 1] for i in range(1, len(sections) - 1, 2)
++          if sections[i] == names[0]]
+ if not s0 or "LTC64B" not in s0[0]:
+     sys.exit("build_carrier: prepare kernel has no LDG.E.LTC64B load")
+ n_hint = s0[0].count("LTC64B")
+diff --git a/candidates/pinning/cpu_cogrind3_ifma.h b/candidates/pinning/cpu_cogrind3_ifma.h
+index a85b684..a89a31d 100644
+--- a/candidates/pinning/cpu_cogrind3_ifma.h
++++ b/candidates/pinning/cpu_cogrind3_ifma.h
+@@ -229,8 +229,16 @@ static QI_INL unsigned hash_block(const vfe *xp, const vfe *yp, const vfe *xm, c
+     return (unsigned)_mm256_movemask_ps(_mm256_castsi256_ps(ok));
+ }
+ 
++#ifndef QSB_CG_ZMASK4
++#define QSB_CG_ZMASK4 1 /* exact bit-30 broadcast to whole 64-bit lanes */
++#endif
+ static QI_INL V zmask4(const uint32_t *d4) {
++#if QSB_CG_ZMASK4
++    const __m128i d = _mm_loadu_si128((const __m128i *)d4);
++    return (V)_mm256_cvtepi32_epi64(_mm_srai_epi32(_mm_slli_epi32(d, 1), 31));
++#else
+     V m; for (int l = 0; l < 4; l++) m[l] = QCG_ZERO(d4[l]) ? ~0ULL : 0; return m;
++#endif
+ }
+ static QI_INL V negmask4(const uint32_t *d4) {
+     const __m128i c = _mm_loadu_si128((const __m128i *)d4);

@@ -1,0 +1,56 @@
+From 96a4f8af82db9f6607b61dc3ccb1abf61568c3c8 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 26 Sep 2026 11:22:12 +0000
+Subject: [PATCH] pinning: allocate-or-halve pipeline slots when VRAM is short
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017u8DVxBCPSdjrvryjLW5H5
+---
+ candidates/pinning/pinning.cu | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/candidates/pinning/pinning.cu b/candidates/pinning/pinning.cu
+index 1c481ac..602cd66 100644
+--- a/candidates/pinning/pinning.cu
++++ b/candidates/pinning/pinning.cu
+@@ -5099,6 +5099,10 @@ int main(int argc, char **argv) {
+     size_t pipeline_tree_bytes=0;
+     size_t super_root_bytes=(size_t)ROOT_GRDSZ*4u*sizeof(uint64_t);
+     size_t root_checkpoint_bytes=(size_t)ROOT_GRDSZ*4u*QSB_CHECKPOINT_STRIDE*sizeof(uint64_t);
++    /* Allocate-or-halve: a 24 GB card whose free VRAM is below the GLV table plus
++     * QSB_SLOTS full-size state sets fails here. Release the partial set, halve BATCH
++     * (it stays a multiple of 256 >= 1M) and retry. BATCH reaches the kernels only as a
++     * launch parameter, so candidates, points and hits are unchanged. */
+     for (int s = 0; s < QSB_SLOTS; s++) {
+         d_pipeline_state[s]=NULL; d_pipeline_roots[s]=NULL; d_pipeline_tree[s]=NULL;
+         d_super_roots[s]=NULL; d_root_checkpoint[s]=NULL;
+@@ -5109,6 +5113,26 @@ int main(int argc, char **argv) {
+             pipeline_err=cudaMalloc(&d_super_roots[s],super_root_bytes);
+         if(pipeline_err==cudaSuccess)
+             pipeline_err=cudaMalloc(&d_root_checkpoint[s],root_checkpoint_bytes);
++        if(pipeline_err!=cudaSuccess && BATCH>(1<<20)){
++            for (int t = 0; t <= s; t++) {
++                cudaFree(d_pipeline_state[t]); cudaFree(d_pipeline_roots[t]);
++                cudaFree(d_super_roots[t]); cudaFree(d_root_checkpoint[t]);
++                d_pipeline_state[t]=NULL; d_pipeline_roots[t]=NULL;
++                d_super_roots[t]=NULL; d_root_checkpoint[t]=NULL;
++            }
++            cudaGetLastError();
++            BATCH>>=1;
++            GRDSZ=(BATCH+QSB_TREE_N-1)/QSB_TREE_N;
++            ROOT_GRDSZ=(GRDSZ+255)/256;
++            pipeline_state_bytes=(size_t)BATCH*QSB_STATE_PLANES*sizeof(ulonglong2);
++            pipeline_root_bytes=(size_t)GRDSZ*8u*sizeof(uint64_t);
++            super_root_bytes=(size_t)ROOT_GRDSZ*4u*sizeof(uint64_t);
++            root_checkpoint_bytes=(size_t)ROOT_GRDSZ*4u*QSB_CHECKPOINT_STRIDE*sizeof(uint64_t);
++            printf("  Pipeline allocation short of VRAM (%s); batch halved to %d\n",
++                   cudaGetErrorString(pipeline_err),BATCH);
++            s=-1;
++            continue;
++        }
+         if(pipeline_err!=cudaSuccess){
+             fprintf(stderr,"Pipeline allocation failed (slot %d): %s\n",s,cudaGetErrorString(pipeline_err));
+             return 1;
+-- 
+2.43.0
+
