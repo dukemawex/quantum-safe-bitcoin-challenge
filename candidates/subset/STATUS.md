@@ -1,3 +1,21 @@
+# Current status — 2026-09-29 05:26 UTC
+
+This header supersedes historical active/waiting labels. Live source both tracks remains8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.
+
+Pinning ZMASK4 0590285a naturally REJECTED973578429 at04:33:54UTC, verified=true,139393 hits,elapsed1201.0468. Exact ZMASK4-only package CLOSED; no retry.
+NEW pinning dc0d2bd6-f285-48b9-a435-372b8065d36f submitted05:20:50UTC from freshly synced8d07 after empty own queue. VALIDATING. Isolated PARITY_ONLY canonical Y parity. Native/host rebuilt exit0;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Public note9253B. Archive gpu-lab/prepared/parity-only-submitted-dc0d2bd6.patch and gpu-lab/submission-note-parity-only-submitted.md are SUBMITTED,not waiting. Never cancel/duplicate.
+
+Subset32002794-e204-49c8-a0db-165b0657cf5d KEY33PAD remains VALIDATING. Waiting H0ADD unchanged: candidates/subset/prepared-h0add-8d07.patch SHA2567beebbeb91c1c8ce830777ca7ef9d03a78a3b13d2683731fd11f685d09204dbe; note submission-note-h0add.md8476B;13 zero-spill native/host,unchanged promoted462496B cubin f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc. Original generic key padding and all64rounds remain; no active KEY33PAD in waiting source. Recovery omits note/carrier,refresh manifest hashes.
+
+NEW WAITING PINNING: QSB_CG_KEY_H0ONLY=1, final output handling only for pub_hash8_shani_wm. Shared compression becomes shani_compress2_impl<H0_ONLY>; false wrapper preserves generic full digest. True wrapper extracts lane3 A from each final ABEF vector and adds incoming st[0] modulo2^32,writing only st[0]. Existing caller reads only H0. All64 rounds,schedule,message packing/generic padding and feature gates unchanged; original cpu_cogrind3_ifma.h retained. No active PARITY_ONLY,closedZMASK4/NORM_IFMA/KEY33PAD/SHA32PAD/FSEL3/PACK2/split45/VLSHA/square.
+Scalar identity model20004 arbitrary incoming/final states passed with wrapping boundaries; NOT SHA-NI execution. Round/schedule body text equals promoted. Generic false-wrapper assembly equals promoted after label normalization. Actual word-major function/header GCC13.3/O3 sites:paddd58->54,pshufd34->30,pblendw3->1,movq8->6;adds2 pextrd and2 addl;movl6->8,movaps1->2,movdqa113 unchanged. msg1/msg2 remain24,rnds2=64,palignr=25. Stack-reference sites13->14,disclosed. Static counts,not runtime; compiler already removed some unused output work and gain may be negligible/negative or inactive with another controller mode.
+Native/host CUDA12.8.93 exit0;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Note10167B. Patch gpu-lab/prepared/key-h0only-8d07.patch SHA256ddae331bf6c5b58f6af4a3bfe9f5d52a968a632985815e61c36dacb86318ff6c; note gpu-lab/submission-note-key-h0only.md; evidence gpu-lab/prepared/key-h0only-evidence.json.
+Recovery omits note/carrier:sync live,apply,copy note,regenerate. Current pinning execution tree holds KEY_H0ONLY,not submittedPARITY_ONLY. Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent. Independent adaptation,no donor speed claim or local targetCPU/GPU execution.
+
+One own active per track;tracks concurrent;MLX independent. NEVER CANCEL. Fresh source/result/overlap/blacklist review and own queue before fire; rebuild moved source. No identical/noise retries. Double-subtraction preparation remains abandoned.
+
+---
+
 # Current status — 2026-09-29 03:03 UTC
 
 This header supersedes older active/waiting labels. Both live sources remain 8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best 1008206828 / kaankolcu; subset best 708411009 / jacklightChen.
