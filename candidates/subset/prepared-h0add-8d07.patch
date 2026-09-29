@@ -1,0 +1,125 @@
+diff --git a/candidates/subset/CpuGrindSubset.h b/candidates/subset/CpuGrindSubset.h
+index f7816eb..a0c4f93 100644
+--- a/candidates/subset/CpuGrindSubset.h
++++ b/candidates/subset/CpuGrindSubset.h
+@@ -1515,6 +1515,9 @@ QSHA static void qsha_x4w_iv(uint32_t (*st)[8], const uint32_t (*wd)[16]) {
+  * = qp[l]) as one vector, lane l = key l. The message words (as native words: word k = key bytes 4k..4k+3 big-endian, key
+  * byte 0 = 0x02 | parity, bytes 1..32 = x big-endian, then 0x80 and the 264-bit length in word 15) are built in registers
+  * and fed to qsha_xw_iv's rounds, two lanes at a time; no message stores or loads, no state stores. */
++#ifndef QSB_CPU_KEY_H0ADD
++#define QSB_CPU_KEY_H0ADD 1 /* feed forward after extracting four h0 lanes */
++#endif
+ QSHA static __m128i qsha_keyhash4_h0(const fe *qx, const uint8_t *qp) {
+     const __m128i IV0 = _mm_set_epi32((int)0x6a09e667, (int)0xbb67ae85, (int)0x510e527f, (int)0x9b05688c);
+     const __m128i IV1 = _mm_set_epi32((int)0x3c6ef372, (int)0xa54ff53a, (int)0x1f83d9ab, (int)0x5be0cd19);
+@@ -1550,9 +1553,18 @@ QSHA static __m128i qsha_keyhash4_h0(const fe *qx, const uint8_t *qp) {
+                 S0[l] = _mm_sha256rnds2_epu32(S0[l], S1[l], m);
+             }
+         }
++#if QSB_CPU_KEY_H0ADD
++        a[2 * h] = S0[0]; a[2 * h + 1] = S0[1];
++#else
+         a[2 * h] = _mm_add_epi32(S0[0], IV0); a[2 * h + 1] = _mm_add_epi32(S0[1], IV0);
++#endif
+     }
+-    return _mm_unpackhi_epi64(_mm_unpackhi_epi32(a[0], a[1]), _mm_unpackhi_epi32(a[2], a[3]));
++    const __m128i h0 = _mm_unpackhi_epi64(_mm_unpackhi_epi32(a[0], a[1]), _mm_unpackhi_epi32(a[2], a[3]));
++#if QSB_CPU_KEY_H0ADD
++    return _mm_add_epi32(h0, _mm_set1_epi32((int)0x6a09e667));
++#else
++    return h0;
++#endif
+ }
+ /* W[i] + K[i] for i < 64 of one 64-byte block (big-endian words), with qsha_x4's schedule steps. */
+ QSHA static void qsha_schedule(uint32_t wk[64], const uint8_t *blk) {
+diff --git a/candidates/subset/SOURCE-MANIFEST.json b/candidates/subset/SOURCE-MANIFEST.json
+index 983a58c..f4f8c5b 100644
+--- a/candidates/subset/SOURCE-MANIFEST.json
++++ b/candidates/subset/SOURCE-MANIFEST.json
+@@ -1,13 +1,12 @@
+ {
+   "schema": "qsb.subset.source-manifest.v1",
+-  "direct_base_public_submission": "521075fe-1466-4304-9ecc-9cd0a618e8d3",
+-  "direct_base_public_commit": "46b24ebaa033fb69c7335794b54fd6a156359ec8",
++  "direct_base_public_submission": "5c7e36c5-0aab-4ced-a6da-93ac4ad5d466",
++  "direct_base_public_commit": "8d07d3ebad41a017dfaa5906b164f883a9b59348",
+   "host_source_submission": "4da17ebc-347c-4b90-aa90-3819b322a465",
+   "host_source_commit": "f391f74dc765352be557efb044f326f0e2190c45",
+   "device_variant_submission": "3e6069ee-b68e-4fd2-bc0e-fbf5804ed599",
+   "device_variant_commit": "0a38640ed29390ecea2c43fe260bef6ab9b61a3e",
+-  "model": "GPT 6 Sol",
+-  "effort": "medium",
++  "model": "GPT (exact variant not exposed)",
+   "harness": "Codex",
+   "carrier_cubin_sha256": "f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc",
+   "files": {
+@@ -18,7 +17,7 @@
+     "COMPLETE-POINT.md": "095d328d7c9d2debe51378706356d9ba3f87a28dcd388ecabb0a50ccf01eb500",
+     "COPYING": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+     "COPYING-secp256k1": "a735999c7e5649df6fcda6fb06ab97435851c392b1b93494ae8725f37441632f",
+-    "CpuGrindSubset.h": "4fb2760d0de32e1e9a283781a243ba59befeea1288914854daaca724d54d0531",
++    "CpuGrindSubset.h": "901794a7f85fb392425a9ee79b837716498f5a951d5fd1c99b7a6ffb0611087f",
+     "GLVScalar.cuh": "96efe62eb4361bf038d01fa821adb19931552609878b7eb1c3c0bef360f3cd35",
+     "GPUHash.h": "c8415e1ddc839e078421a1ee347a9db5036f84714b03edb700aa2e635e05fedd",
+     "GPUMath.h": "3205120d961990dc55e7e3c622411c2c581d506fa730f568a122530038b84ba6",
+@@ -31,15 +30,15 @@
+     "POINT-X3.md": "4424c2217c88fff84f1a8e36b3267cc0e6faa10bac189b627c3fec9be8361bc0",
+     "QsbCarrier.h": "3b2d0dbe6a41df5483ea8777d6519a6017e0a53a91a770f92ec8363124d495c5",
+     "TREE_INVERSE.md": "0b1798a37a17d8e882604784a375068bc1bc1bd5b4ae98da8f903d876961cdab",
+-    "build_carrier.sh": "42473abf05df44dff80093f572bf8c37612dc00569c5b99c0c95373ebaf62e0a",
++    "build_carrier.sh": "a8c5dacb500857c75bfeb2e19a084ae591b6ab8bea30556509ddfe44f35b192f",
+     "chain_replay_field.cuh": "7390f456f1f8c4cdbf0df2d9e42e8f88935b09e26e1f0be6af6ddbfa59ce4bd9",
+     "hit_filter_field.cuh": "b9640d8c4db125f82697ae5bb84182f72c8d22a0dac5567527620dff21659937",
+     "hit_filter_field_sc.cuh": "d5b1ac66e1a8f62f17779e39c4244f873080f4864dda9966710c2f5a9f2a6d0e",
+     "hit_filter_field_sc_aluz.cuh": "047329878bb74a5ba1e07c00ca1ce1b40a4e96129e9d3016c00dbc7af9fdacb4",
+-    "qsb_carrier_sm89.h": "c820151b7c350b1f7eae995f3214773a14aebe53e649b706c08344268dafcaa2",
++    "qsb_carrier_sm89.h": "7348a922a212edb22f4bf68aabf21537693790c0a60df7d8b234e2085a5418eb",
+     "sha_gate_fma.cuh": "2233afa68f4909a7932732379fce3815729ec6fb384af63fa111683ebf37819b",
+     "square32.cuh": "a973d1dd58bf760ce5cbff79e69cbe8cd725d8ad1a642741e936fb2d948be771",
+-    "submission-note.md": "5ecab3979f411618fec80bdf59aeb0c8dc7a530cae1f8721a6d7627db6cae050",
++    "submission-note.md": "4c869a4046f2e013df90bb0550c562c05e7a3b322c32b446e0a6b83b160d0a39",
+     "subset.cu": "bee876563b8c7234eefa658fe4bd2f2b484ee7ce5197df94d68802ce86e281f1",
+     "tests/gpu_epochs/by_table_matrix_audit.cu": "940cb53feb731f966adb79d08c415c51e119c0f544ac26944bc580c2f287df4e",
+     "tests/gpu_epochs/canonical_add_audit.cu": "fd0bb33786a042b6e830428cb464a31e7804a83042bfbb4b92e555d73208728e",
+@@ -70,5 +69,6 @@
+     "tests/gpu_epochs/window_schedule_shared.cuh": "ad256d03de4ecadf248e091a5ee37a028f1d1b127255044793e1f5ad31125652",
+     "tests/gpu_epochs/zinv32.cuh": "b5e6833b34160b7603cf7a952211471dce772c65f79825f96c071f28a8b364d8",
+     "y_pair_sc.cuh": "923061f27e02bed6e78c352abdb1285c108650b699bb35668615ae0ef782a4cb"
+-  }
++  },
++  "current_change": "QSB_CPU_KEY_H0ADD=1: combine four H0 feed-forward additions after original lane extraction; no padding or round changes."
+ }
+diff --git a/candidates/subset/build_carrier.sh b/candidates/subset/build_carrier.sh
+index be1213f..31eb25e 100755
+--- a/candidates/subset/build_carrier.sh
++++ b/candidates/subset/build_carrier.sh
+@@ -28,7 +28,12 @@ fi
+ "$NVCC" -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin ${QSB_CARRIER_NVCC_FLAGS:-} \
+      -Xptxas -v -o "$W/c.cubin" subset.cu 2> "$W/ptxas.log"
+ "$CUOBJDUMP" -symbols "$W/c.cubin" > "$W/symbols.txt"
+-"$CUOBJDUMP" -sass "$W/c.cubin" > "$W/sass.txt"
++if ! "$CUOBJDUMP" -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump failed; inspecting the same image with nvdisasm" >&2
++    NVDISASM=$(dirname "$(command -v "$NVCC")")/nvdisasm
++    [ -x "$NVDISASM" ] || NVDISASM=nvdisasm
++    "$NVDISASM" "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, glob, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -57,8 +62,13 @@ for g in ("qsb_carrier_knobs", "QSB_CONST_SCHEDULE", "QSB_U2R", "QSB_U2R_ISO", "
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the digest kernel (the only table reader on the search path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-dig = [b for b in fn if b.startswith(names[3])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    dig = [b for b in fn if b.startswith(names[3])]
++else:
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    dig = [sections[i + 1] for i in range(1, len(sections) - 1, 2)
++           if sections[i] == names[3]]
+ if not dig or "LTC64B" not in dig[0]:
+     sys.exit("build_carrier: digest kernel has no LTC64B load")
+ n_hint = dig[0].count("LTC64B")
