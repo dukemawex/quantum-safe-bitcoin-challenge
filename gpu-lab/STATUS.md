@@ -1,3 +1,18 @@
+# Current status — 2026-09-29 08:01 UTC
+
+This header supersedes readiness labels below. TRANSIENT YUKON BLOCKER: both official submissions --all --json queries were attempted twice and each exited1 with "The operation was aborted"; subset sync --force also exited1 with that message. No valid fresh queue or source response in this run. Last verified source/queues remain the 07:39 UTC snapshot below: both refs7813ffe1b7442f4a998e4978834d9ce2bd4559c6, subset best720332123/kshitij-hash, pinning1008206828/kaankolcu, own subset32002794 KEY33PAD and pinningdc0d2bd6 PARITY_ONLY validating then. Do not claim they are still validating now without a successful fresh query. Nothing submitted or cancelled. Keep the loop enabled; retry later.
+
+Pinning waiting KEY_H0ONLY qualification from07:39 retained unchanged. Subset old H0ADD remains parked. Subset runtime worktree stays clean at last verified7813; no candidate edit was made after the failed sync.
+
+NEW SUBSET RESEARCH ONLY, NOT READY: QSB_CPU_KH16_H0ADD=1, feed-forward after sixteen raw H0 lane extractions in active kh16_pass. Original round/schedule code unchanged. Extract raw lane3 from all sixteen final ABEF states then add broadcast0x6a09e667 with one512-bit vector add before existing pass mask. Dev h0_out still stores corrected words. This targets the currently enabled KH16 path, not the parked old fallback two-pair helper, and preserves inherited promoted KH16 without retrying the closed KH16-only import.
+Scratch actual-function GCC13.3/O3 comparison: vpaddd186->183, vpbroadcastd66->67, movl66->67; sha256rnds2 remains128; stack-reference sites4 both. Static sites only, no SIMD/runtime/timing claim. Scalar model20022 groups x16 four-word states includes wrap boundaries and all16 key mask positions; exact full-vector IV-add/extract vs extract/16lane-add outputs and masks agree for zero-bit cases1,8,16,24,31,32,40. Does not execute SHA rounds or SIMD.
+Archive candidates/subset/research/kh16-h0add-7813.patch SHA256c4d3b407c41ecf2bbde68217de54dcd2db4ae08de20eefc377956a57cbdd61a8, plus -evidence.json, -model.py, -wrapper.cpp. These are RESEARCH artifacts only. No full native or host build yet, no >=5KiB public note, no promotion/gain claim. Next: successful fresh queue/source sync first; check overlap; apply draft only if still distinct; native+host builds and cubin/gates; honest note+credits; then qualify. Do not submit directly from this draft.
+Research scratch /tmp/qsb-0758. Model check-model.py; standalone wrappers kh16add-0.s/kh16add-1.s and kh16add-static.json. prepare-kh16add.py writes only scratch proposed header, not runtime worktree.
+
+Keep all prior closures and active-submission no-cancel rule. No noise repeats. MLX independent and untouched.
+
+---
+
 # Current status — 2026-09-29 07:39 UTC
 
 This header supersedes historical source/queue/readiness labels. Both live source refs advanced to 7813ffe1b7442f4a998e4978834d9ce2bd4559c6. Subset frontier is now 720332123 / kshitij-hash, promoted submission e6715658-2270-4be9-8caa-9a7c7e072dd3 at 2026-09-29 06:27:47.363 UTC. Pinning frontier remains 1008206828 / kaankolcu / b9736ce1-e9d8-4a3c-b163-0deb274afa2d. Shared source movement is from subset promotion; git diff confirms every candidates/pinning file equals old 8d07 base.
