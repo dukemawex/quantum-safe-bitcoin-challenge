@@ -1,3 +1,22 @@
+# Current status — 2026-09-29 00:21 UTC
+
+This header supersedes older active/waiting labels. Both live sources remain8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.
+
+Pinning KEY33PAD92fb758c naturally REJECTED990563285 at00:11:04UTC,verified=true,141823 hits,elapsed1201.0313. Exact KEY33PAD-only package CLOSED; no retry.
+NEW pinning bff7e30d-f5de-4d0e-922e-25d70ac99638 submitted00:16:39UTC from fresh8d07 after empty own queue; VALIDATING in final query. Isolated NORM_IFMA final canonical correction. Native/host passed again;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Archive gpu-lab/prepared/norm-ifma-submitted-bff7e30d.patch and gpu-lab/submission-note-norm-ifma-submitted.md are SUBMITTED,not waiting. Never cancel/duplicate.
+
+Subset372154a4-3ead-43c7-b6cc-1b43fa6dd4bd SHA32PAD remains VALIDATING. Waiting subset KEY33PAD unchanged: candidates/subset/prepared-key33pad-8d07.patch and submission-note-key33pad.md9730B;13 zero-spill native/host,unchanged device image. Patch SHA2560032f2431fa298e2e121e25624734d8ff271f45a4ef4ec34c32f62c433d8dc84. No submitted second-SHA32PAD in waiting source.
+
+NEW WAITING PINNING: QSB_CG_ZMASK4=1, direct bit30 broadcast only in CPU IFMA zmask4. Load four32-bit digit words,shiftleft1,arithmeticright31,sign-extend to four64-bit masks. Exact QCG_ZERO semantics for all bit30/31 combinations; lowerbits/signencoding and callers unchanged. No submitted NORM_IFMA,closedKEY33PAD/SHA32PAD/FSEL3/PACK2/split45/VLSHA/square,GPU/controller changes.
+Integer model10256 four-lane cases passed,including all256 high-two-bit combinations across fourlanes. NOT SIMD execution. Exact-helper GCC13.3/O3 wrapper:17->3 static vector sites;four->zero stack-reference sites. New vpslld,vpsrad,vpmovsxdq. Static checks only; zero-digit branch may be rare and aggregate benefit negligible,not measured.
+Native/host CUDA12.8.93 exit0;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Note9881B,no local runtime/gain/promotion claim.
+Patch gpu-lab/prepared/zmask4-8d07.patch SHA256ac1c8b335a2b49f1acf27d418a76b9eb058384f5eaaeaa988c34fce0d7a6deb2; note gpu-lab/submission-note-zmask4.md; evidence gpu-lab/prepared/zmask4-evidence.json. Recovery omits note/carrier: sync live,apply,copy note,regenerate. Current pinning execution tree holds waiting ZMASK4,not submitted NORM_IFMA. Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent.
+Abandoned double-subtraction preparation: representative local-output wrapper erased initial apparent arithmetic savings and proposed form materialized stack temporaries. Not qualified or submitted; no revival based on aliasing-wrapper counts.
+
+One own active per track; tracks concurrent; MLX independent. NEVER CANCEL. Reassess live tip,result,overlap/blacklists and fresh own queue before fire; rebuild moved source. No identical/noise retries or targetCPU/GPU execution claims.
+
+---
+
 # Current status — 2026-09-28 22:02 UTC
 
 This header supersedes older active/waiting labels. Live source both tracks remains8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.
