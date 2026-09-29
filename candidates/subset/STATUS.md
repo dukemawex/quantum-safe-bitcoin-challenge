@@ -1,3 +1,17 @@
+# Current status — 2026-09-29 10:48 UTC
+
+This header supersedes all historical active labels. Direct authenticated official /api/submissions/<id> reads succeeded for both known own submissions; both completed naturally:
+- Subset KEY33PAD32002794-e204-49c8-a0db-165b0657cf5d REJECTED706432091 at2026-09-29T07:51:16.610Z, verified=true,101227 hits,elapsed1202.0315. Reason: score did not improve current best. Exact KEY33PAD-only package CLOSED; never replay.
+- Pinning PARITY_ONLYdc0d2bd6-f285-48b9-a435-372b8065d36f REJECTED1013907985 at2026-09-29T08:14:41.037Z, verified=true,145241 hits,elapsed1201.6572. Official reason: score improved but fell short of required100bips over current best. This is +0.5654749444% over1008206828, below1% promotion threshold. Exact PARITY_ONLY package CLOSED; no noise retry or automatic combination based on this score.
+
+Direct official benchmark reads also succeeded: both sourceRef7813ffe1b7442f4a998e4978834d9ce2bd4559c6; subset best720332123, pinning1008206828; both open. A direct subset full-list retry succeeded (11533830 bytes): filtered exact solverUsername=dukemawex,16 own entries,zero active. Pinning full-list still returns502 after retries; complete pinning own queue remains unknown. Subsequent subset Yukon sync --force still exits1 with empty output; no fresh sync succeeded. DO NOT infer an empty pinning queue solely from the known completion. No new submission/cancellation or runtime source change. Treat as transient service blocker and keep the loop enabled.
+
+Pinning KEY_H0ONLY remains waiting/requalified on7813 per07:39 evidence, not submitted. Subset KH16_H0ADD remains RESEARCH ONLY, pending successful fresh sync, native+host qualification and honest>=5KiB note. Old subset H0ADD remains parked. Do not bypass the fresh queue/sync gate. Saved direct result evidence: subset candidates/subset/research/official-key33pad-32002794-result.json; pinning gpu-lab/prepared/official-parity-only-dc0d2bd6-result.json. Subset list is /tmp/subset-queue-1050.json; failed sync log /tmp/qsb-1046/sub-sync.log. Response records were filtered to relevant public result fields, not note text. Local raw responses /tmp/subset-own-1048.json and /tmp/pinning-own-1048.json; fresh benchmark responses /tmp/subset-benchmark-1046.json and /tmp/pinning-benchmark-1047.json.
+
+Preserve inherited promoted components and every previous closure. MLX independent and untouched. NEVER CANCEL.
+
+---
+
 # Current status — 2026-09-29 08:01 UTC
 
 This header supersedes readiness labels below. TRANSIENT YUKON BLOCKER: both official submissions --all --json queries were attempted twice and each exited1 with "The operation was aborted"; subset sync --force also exited1 with that message. No valid fresh queue or source response in this run. Last verified source/queues remain the 07:39 UTC snapshot below: both refs7813ffe1b7442f4a998e4978834d9ce2bd4559c6, subset best720332123/kshitij-hash, pinning1008206828/kaankolcu, own subset32002794 KEY33PAD and pinningdc0d2bd6 PARITY_ONLY validating then. Do not claim they are still validating now without a successful fresh query. Nothing submitted or cancelled. Keep the loop enabled; retry later.
