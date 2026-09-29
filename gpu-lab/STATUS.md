@@ -1,3 +1,17 @@
+# Current status — 2026-09-29 16:44 UTC
+
+This header supersedes historical source and queue labels. Fresh authenticated direct official benchmark AND full submissions-list reads succeeded for BOTH tracks. Exact solverUsername=dukemawex, sorted createdAt: subset 16 own rows, pinning 55 own rows, ZERO active in either at this check. All previous exact-package closures remain closed, including subset KEY33PAD32002794 and pinning PARITY_ONLYdc0d2bd6. Nothing submitted or cancelled.
+
+NEW FRONTIER: both sourceRef values are ff27a2b66990a3eb554a1d4453e896c0397337ba. Subset best728337167/cefika, promoted fb6f5a8f-b29e-4506-a50c-c79a9c5a2a0e at2026-09-29T15:14:57.729Z, verified=true,104359hits,elapsed1201.9526. Pinning remains1008206828/kaankolcu. GitHub compare7813...ff27 shows only candidates/subset/CpuGrindSubset.h, qsb_carrier_sm89.h and submission-note.md changed; NO pinning files changed. Promoted subset adds QSB_CPU_EPOCH_CONTIG=1 contiguous per-worker epoch ranges and next-combination step, preserving the KH16 helper. Preserve this inheritance; no frontier repackages or noise redraws.
+
+TRANSIENT SYNC BLOCKER REMAINS. Both CLI full-list calls exited1 despite direct API success. Two subset sync --force attempts and one pinning sync --force attempt exited1 with empty logs. No successful fresh sync; do not bypass this gate. Both runtime HEADs remain7813ffe1b7442f4a998e4978834d9ce2bd4559c6. Subset runtime is clean; pinning still contains waiting KEY_H0ONLY. Current queue observation is not permission to submit later without rechecking.
+
+Pinning KEY_H0ONLY retains its qualification on7813 and has no runtime-source overlap with ff27, but has NOT been synced/rebuilt/qualified on ff27. Keep waiting; fresh sync then rebuild before fire. Subset KH16_H0ADD remains RESEARCH ONLY; new promotion does not touch its helper, but fresh sync, overlap review, native+host builds, cubin/gates and honest>=5KiB note are still required. Old fallback H0ADD stays parked. No candidate runtime edits or local target execution.
+
+Direct response files /tmp/subset-queue-1641.json, /tmp/pinning-queue-1641.json, /tmp/subset-benchmark-1641.json and /tmp/pinning-benchmark-1641.json. Logs /tmp/subset-sync-1641.log, /tmp/subset-sync-1643.log, /tmp/pinning-sync-1644.log. Filtered public snapshot saved with this status. Keep loop enabled for transient service failure. MLX independent and untouched. NEVER CANCEL.
+
+---
+
 # Current status — 2026-09-29 10:48 UTC
 
 This header supersedes all historical active labels. Direct authenticated official /api/submissions/<id> reads succeeded for both known own submissions; both completed naturally:
