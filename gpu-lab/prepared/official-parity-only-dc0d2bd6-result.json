@@ -1,0 +1,29 @@
+{
+  "id": "dc0d2bd6-f285-48b9-a435-372b8065d36f",
+  "benchmarkId": "b352879c-669f-44ef-98cd-ad3d34d0fefa",
+  "solverUsername": "dukemawex",
+  "status": "rejected",
+  "officialScore": 1013907985,
+  "officialMetrics": {
+    "gpu": "RTX_4090",
+    "mode": "fixed_time",
+    "unit": "verified candidates per second",
+    "bench": "pinning",
+    "verified": true,
+    "direction": "higher is better",
+    "elapsed_s": 1201.6572,
+    "candidates": 1218369814528,
+    "hits_per_s": 120.867249,
+    "problem_seed": 1058888644,
+    "verified_hits": 145241,
+    "throughput_Mps": 1013.907985,
+    "leading_zero_bits": 24,
+    "hit_relative_variance": 0.002624,
+    "candidates_self_reported": 1231811675079
+  },
+  "rejectionReason": "score improved but fell short of the required 100 bips improvement over the current best",
+  "promotionStatus": null,
+  "submissionCommitSha": "8f61a38e798de3378d77ee2c06e5ab39e41b9ee6",
+  "createdAt": "2026-09-29T05:20:50.011Z",
+  "updatedAt": "2026-09-29T08:14:41.037Z"
+}
