@@ -1,3 +1,17 @@
+# Current status — 2026-09-29 07:39 UTC
+
+This header supersedes historical source/queue/readiness labels. Both live source refs advanced to 7813ffe1b7442f4a998e4978834d9ce2bd4559c6. Subset frontier is now 720332123 / kshitij-hash, promoted submission e6715658-2270-4be9-8caa-9a7c7e072dd3 at 2026-09-29 06:27:47.363 UTC. Pinning frontier remains 1008206828 / kaankolcu / b9736ce1-e9d8-4a3c-b163-0deb274afa2d. Shared source movement is from subset promotion; git diff confirms every candidates/pinning file equals old 8d07 base.
+
+Own subset 32002794-e204-49c8-a0db-165b0657cf5d KEY33PAD and pinning dc0d2bd6-f285-48b9-a435-372b8065d36f PARITY_ONLY both remain VALIDATING in fresh official query. No cancellation, duplicate or new submission.
+
+SUBSET H0ADD IS NOW PARKED, NOT READY. Its 8d07 recovery patch fails to apply to the new CpuGrindSubset.h. New promoted defaults include QSB_CPU_KH16=1, QSB_CPU_SHA4=1, QSB_CPU_SHC=1; the old two-pair helper is bypassed in the guarded KH16 path, and fallback SHA4 implementation changed. Do not dispatch the archived H0ADD patch or merely force it onto fallback code. No qualified waiting subset candidate on current source. Next preparation must inventory the new active path and demonstrate a distinct non-inert change. Historical H0ADD patch/note/model retained as research only. Current subset execution tree is clean promoted 7813, not H0ADD. SOURCE-MANIFEST.json was removed by promoted source; do not restore stale old manifest wholesale.
+
+WAITING PINNING KEY_H0ONLY requalified on 7813. Same runtime diff and all pinning base files byte-identical to 8d07; no overlap with subset promotion. Native and standard host CUDA12.8.93 builds both exit0 again; 15 zero-spill records, prepare128/finish64, five LTC64B. Cubin 476832B SHA256913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. New recovery gpu-lab/prepared/key-h0only-7813.patch, note gpu-lab/submission-note-key-h0only-7813.md, evidence gpu-lab/prepared/key-h0only-7813-evidence.json. Recovery omits note/carrier; sync live, apply, copy note, regenerate. Current pinning execution tree holds waiting KEY_H0ONLY. Logs /tmp/qsb-0732/pin-native.log, pin-host.log; raw native /tmp/tmp.hOj9nvqJZp/ptxas.log. Prior exact-source scalar/static checks remain applicable because runtime sources are identical. No local target execution, gain or promotion claim.
+
+Keep all prior closures. New promoted subset inherits formerly isolated closed components including KH16/MRG/X4PS/padding and weighted-prefix/v3 lineage. Preserve promoted inheritance; this does not reopen any closed experiment. Active old-source submissions must finish naturally. Fresh source/result/overlap/own queue review still required before fire. One own active per track; tracks concurrent; MLX independent. NEVER CANCEL.
+
+---
+
 # Current status — 2026-09-29 05:26 UTC
 
 This header supersedes historical active/waiting labels. Live source both tracks remains8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.
