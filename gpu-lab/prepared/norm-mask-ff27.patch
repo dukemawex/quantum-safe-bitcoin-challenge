@@ -1,0 +1,62 @@
+diff --git a/candidates/pinning/build_carrier.sh b/candidates/pinning/build_carrier.sh
+index 7a2b6a6..219ee5f 100755
+--- a/candidates/pinning/build_carrier.sh
++++ b/candidates/pinning/build_carrier.sh
+@@ -10,7 +10,10 @@ W=$(mktemp -d)   # logs and the raw cubin stay out of the submission directory
+ nvcc -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin \
+      -Xptxas -v -o "$W/c.cubin" pinning.cu 2> "$W/ptxas.log"
+ cuobjdump -symbols "$W/c.cubin" > "$W/symbols.txt"
+-cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"
++if ! cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump disassembly failed; checking the same cubin with nvdisasm" >&2
++    nvdisasm "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -44,8 +47,13 @@ for g in ("qsb_carrier_zeros", "pin_u2rx_words", "pin_u2ry_words", "pin_iso_invu
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the prepare kernel (the only table reader on the hot path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-s0 = [b for b in fn if b.startswith(names[0])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    s0 = [b for b in fn if b.startswith(names[0] + "\n") or b.startswith(names[0] + " ")]
++else:
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    s0 = [sections[i + 1] for i in range(1, len(sections) - 1, 2)
++          if sections[i] == names[0]]
+ if not s0 or "LTC64B" not in s0[0]:
+     sys.exit("build_carrier: prepare kernel has no LDG.E.LTC64B load")
+ n_hint = s0[0].count("LTC64B")
+diff --git a/candidates/pinning/cpu_cogrind3_ifma.h b/candidates/pinning/cpu_cogrind3_ifma.h
+index a85b684..4de0a1b 100644
+--- a/candidates/pinning/cpu_cogrind3_ifma.h
++++ b/candidates/pinning/cpu_cogrind3_ifma.h
+@@ -94,6 +94,9 @@ static QI_INL void fwk(vfe *r) {
+     r->n[0] = t0; r->n[1] = t1; r->n[2] = t2; r->n[3] = t3; r->n[4] = t4;
+ }
+ /* canonical value in [0, p) from limbs < 2^62 (libsecp256k1 fe_normalize, radix 2^52) */
++#ifndef QSB_CG_NORM_MASK
++#define QSB_CG_NORM_MASK 1 /* predicate construction in mask registers only */
++#endif
+ static QI_INL void fnorm(vfe *r) {
+     const V M = vs1(QI_M52);
+     V t0 = r->n[0], t1 = r->n[1], t2 = r->n[2], t3 = r->n[3], t4 = r->n[4], m;
+@@ -104,8 +107,15 @@ static QI_INL void fnorm(vfe *r) {
+     t3 += t2 >> 52; t2 &= M; m &= t2;
+     t4 += t3 >> 52; t3 &= M; m &= t3;
+     /* value < 2p here; subtract p once if value >= p (limbs < 2^53: signed compares are exact) */
++#if QSB_CG_NORM_MASK
++    const __mmask8 correction = _mm256_cmpge_epu64_mask((__m256i)t0, (__m256i)vs1(0xFFFFEFFFFFC2FULL))
++        & _mm256_cmpeq_epi64_mask((__m256i)t4, (__m256i)vs1(QI_M48))
++        & _mm256_cmpeq_epi64_mask((__m256i)m, (__m256i)M);
++    x = (t4 >> 48) | (V)_mm256_maskz_set1_epi64(correction, 1);
++#else
+     const V ge = (V)_mm256_cmpgt_epi64((__m256i)t0, (__m256i)vs1(0xFFFFEFFFFFC2FULL - 1));
+     x = (t4 >> 48) | ((V)_mm256_cmpeq_epi64((__m256i)t4, (__m256i)vs1(QI_M48)) & (V)_mm256_cmpeq_epi64((__m256i)m, (__m256i)M) & ge & vs1(1));
++#endif
+     t0 += (vs1(0) - x) & vs1(QI_C);                             /* x in {0, 1} */
+     t1 += t0 >> 52; t0 &= M;
+     t2 += t1 >> 52; t1 &= M;
