@@ -1,3 +1,27 @@
+# Current status — 2026-09-29 03:03 UTC
+
+This header supersedes older active/waiting labels. Both live sources remain 8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best 1008206828 / kaankolcu; subset best 708411009 / jacklightChen.
+
+Subset second-SHA32PAD 372154a4 naturally REJECTED 706714889 at 02:46:46 UTC, verified=true, 101268 hits, elapsed1202.0372. Pinning NORM_IFMA bff7e30d naturally REJECTED 987709433 at 02:37:17 UTC, verified=true, 141418 hits, elapsed1201.0619. Both exact packages CLOSED; no retry.
+
+NEW subset 32002794-e204-49c8-a0db-165b0657cf5d submitted 02:53:25 UTC from freshly synced8d07 after empty own queue; VALIDATING in final query. Isolated KEY33PAD compressed-key padding identities. Native/host passed again;13 zero-spill,three LTC64B;462496B cubin f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc equals promoted. Archive candidates/subset/prepared-key33pad-submitted-32002794.patch and submission-note-key33pad-submitted.md are SUBMITTED,not waiting.
+
+NEW pinning 0590285a-eb84-49f8-b1e0-12cd90540b71 submitted 02:53:26 UTC from freshly synced8d07 after empty own queue; VALIDATING in final query. Isolated ZMASK4 direct bit30 broadcast. Native/host passed again;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Archive gpu-lab/prepared/zmask4-submitted-0590285a.patch and gpu-lab/submission-note-zmask4-submitted.md are SUBMITTED,not waiting. Never cancel/duplicate either active.
+
+NEW WAITING SUBSET: QSB_CPU_KEY_H0ADD=1, feed-forward placement only in qsha_keyhash4_h0. Save four final S0 states, retain original H0 unpack order, then one broadcast0x6a09e667 addition replaces four full-register IV additions. All64 rounds and original generic key padding/schedules remain. No active KEY33PAD,closedSHA32PAD/KH16/MRG/X4PS,field/GPU/worker changes.
+Integer model20005 groups of four arbitrary final states checked exact unpack order and modulo32-bit wrap. NOT SHA-NI execution. Actual-function GCC13.3/O3 wrapper paddd112->109,movdqa143->141,movaps2->1,stack-reference sites4->2;msg1 remains48,msg2=48,rnds2=128,palignr=52. Static counts,not timings.
+Native/host CUDA12.8.93 exit0;13 zero-spill,three LTC64B;462496B cubin f74548427859ec03273f05e9151c810716c6475596e0213a0db3915e468aa5dc equals promoted. Note8476B. Patch candidates/subset/prepared-h0add-8d07.patch SHA2567beebbeb91c1c8ce830777ca7ef9d03a78a3b13d2683731fd11f685d09204dbe; note candidates/subset/submission-note-h0add.md; evidence prepared-h0add-evidence.json.
+Credits terrapinelf jacklightChen i34-9 ercumentyildirim HyeokxC RealAdii kshitij-hash fkiene. Independent identity,no donor speed claim. Recovery omits carrier/note: sync live,apply,copy note,regenerate carrier,refresh manifest hashes.
+
+NEW WAITING PINNING: QSB_CG_PARITY_ONLY=1, canonical Y parity only in IFMA key-hash path. fparity preserves fnorm's first-stage folding/carries/exact correction x,then returns(t0^x)&1 since C is odd. Original fnorm unchanged. Production fully normalizes X but passes Y to parity helper; QCG_EC_HOOK keeps full canonical Y for hooks. All field arithmetic,EC recurrence,hashing,packing/controller/GPU unchanged. No activeZMASK4 or closedNORM_IFMA,KEY33PAD,SHA32PAD,FSEL3,PACK2,split45,VLSHA,square.
+Scalar model20010 legal limb vectors below2^62 matched full original normalization and bigint modulo-p parity; x0=20005,x1=5 boundary cases. NOT IFMA execution. Actual-header GCC13.3/O3 wrapper old fullfnorm then n0&1 vs helper: vpaddq5->4,vpand6->5,vpternlogq2->3,vpxor1->0,vpor1->0,vpsubq1->0;one IFMA,6 shifts,3 comparisons,zero stack sites both. Compiler already deletes unused high-limb outputs in old wrapper; only small residual change,not a claimed complete second-pass elimination.
+Native/host CUDA12.8.93 exit0;15 zero-spill,prepare128/finish64,five LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Note8815B. Patch gpu-lab/prepared/parity-only-8d07.patch SHA25660b17dee258d3c74b3f33c3e6c257be75f8fea70fc831c116e26884f578a406f; note gpu-lab/submission-note-parity-only.md; evidence gpu-lab/prepared/parity-only-evidence.json.
+Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent. Recovery omits note/carrier: sync live,apply,copy note,regenerate. No local runtime/gain/promotion claim for either waiting package.
+
+One own active per track; tracks concurrent; MLX independent. NEVER CANCEL. Reassess live tip,result,overlap/blacklists and fresh own queue before fire; rebuild moved source. No identical/noise retries. Double-subtraction preparation remains abandoned due misleading alias-wrapper savings and representative stack temporaries.
+
+---
+
 # Current status — 2026-09-29 00:21 UTC
 
 This header supersedes older active/waiting labels. Both live sources remain8d07d3ebad41a017dfaa5906b164f883a9b59348. Pinning best1008206828/kaankolcu; subset best708411009/jacklightChen.
