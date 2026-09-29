@@ -1,3 +1,21 @@
+# Current status — 2026-09-29 20:20 UTC
+
+This header supersedes previous active/waiting labels. Live source remains ff27a2b66990a3eb554a1d4453e896c0397337ba; subset best728337167/cefika, pinning1008206828/kaankolcu.
+
+Pinning KEY_H0ONLY1e3483fd naturally REJECTED989216415 at2026-09-29T19:55:21.151Z, verified=true,141635hits,elapsed1201.0724. Score below current best. Exact package CLOSED; no retry.
+NEW pinning33b88396-81e4-433f-968a-4edba12f9607 H0BOUND submitted2026-09-29T20:16:59.701Z after successful fresh sync and empty exact-own queue; source unchangedff27 and byte-identical previously native/host-qualified source restored. VALIDATING in final full-list query. Archive gpu-lab/prepared/h0bound-submitted-33b88396.patch and gpu-lab/submission-note-h0bound-submitted.md are SUBMITTED,not waiting. Note8620B. Never cancel/duplicate.
+
+Subset5997cc2d-9c1a-4eb9-bb2c-a9382215ebff KH16_H0ADD remains VALIDATING. Waiting subset KH16_H0PACK4 remains unchanged and qualified. Final full-list exact-own counts: subset17 rows/one active, pinning57 rows/one active.
+
+NEW WAITING PINNING: QSB_CG_NORM_MASK=1. Only fnorm final correction-predicate construction: three AVX512VL comparison masks intersect; maskz_set1_epi64 returns zero/one lane values. Original fold/carry, m accumulation, t4>>48, final t0+=(0-x)&C, second carry and full canonical stores unchanged. This is distinct from CLOSED NORM_IFMA's final arithmetic replacement, which is absent. No active H0BOUND or closed KEY_H0ONLY/PARITY_ONLY/ZMASK4/other cuts.
+Model20026 four-lane groups/80104 legal five-limb vectors below2^62 matched original full normalization and bigint modulo-p; all16 predicate patterns, boundaries and randoms. Correction x0=80052,x1=52. NOT target SIMD/IFMA execution.
+Actual-header GCC13.3/O3 full-output local-value wrapper: vpand12->11,vpternlogq2->1; vector compare vpcmpgtq+2vpcmpeqq replaced by vpcmpuq+2vpcmpq mask forms; zero stack memory sites both. Static checks only; no measured gain or promotion claim.
+Native and standard host CUDA12.8.93 both exit0;15 zero-spill,prepare128/finish64,5LTC64B;476832B cubin913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463 equals promoted. Note10464B. Recovery gpu-lab/prepared/norm-mask-ff27.patch SHA25684a2eaa7f104f34c83e03becbdc98aafdf8575fc887a48223e919bba41d160a0; note gpu-lab/submission-note-norm-mask.md; evidence gpu-lab/prepared/norm-mask-evidence.json; scalar model and actual-header wrapper also archived. Recovery omits carrier/note: sync current live, apply, copy note, regenerate. Current pinning runtime tree holds NORM_MASK, not submittedH0BOUND. Credits kaankolcu terrapinelf ercumentyildirim cefika DPZZxlz hybridnoise i34-9 ItlaStudent.
+
+Logs /tmp/qsb-2016. Waiting native raw/tmp/tmp.k07MMcJwdb/ptxas.log; normmask-native.log,normmask-host.log,model-normmask.py,normmask-wrapper.cpp and static/model JSON. No local target execution. One active per track, fresh source/queue/result/overlap review before next fire. Preserve every closure and inheritance. MLX untouched. NEVER CANCEL.
+
+---
+
 # Current status — 2026-09-29 18:34 UTC
 
 This header supersedes historical blocker/readiness labels. Yukon CLI full-list and sync recovered. Both tracks freshly synced successfully to ff27a2b66990a3eb554a1d4453e896c0397337ba, rebuilt candidates, synced again immediately before fire, and fresh exact-own queues were empty. Live source remains ff27; subset frontier728337167/cefika, pinning1008206828/kaankolcu. No cancellation. MLX untouched.
