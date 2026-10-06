@@ -1,0 +1,25 @@
+{
+  "model_messages": 1026,
+  "model_scope": "64 grouped recurrence words and full scalar digest versus hashlib; not SHA-NI execution",
+  "static_wrapper_sites": {
+    "old": {
+      "sha256msg1": 23,
+      "sha256msg2": 24,
+      "sha256rnds2": 64,
+      "palignr": 27,
+      "paddd": 56,
+      "movdqa": 117,
+      "stack_reference_sites": 14
+    },
+    "new": {
+      "sha256msg1": 22,
+      "sha256msg2": 24,
+      "sha256rnds2": 64,
+      "palignr": 26,
+      "paddd": 54,
+      "movdqa": 116,
+      "stack_reference_sites": 14
+    }
+  },
+  "runtime_measured": false
+}

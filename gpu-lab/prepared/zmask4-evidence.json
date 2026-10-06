@@ -1,0 +1,39 @@
+{
+  "model_four_lane_cases": 10256,
+  "exhaustive_high_two_bits_combinations": 256,
+  "runtime_executed": false,
+  "wrappers": {
+    "0": {
+      "static_vector_sites": 17,
+      "instructions": {
+        "vpxor": 3,
+        "vpbroadcastd": 2,
+        "vmovdqa": 4,
+        "vpand": 1,
+        "vpcmpeqd": 1,
+        "vpandn": 1,
+        "vpmovzxdq": 2,
+        "vpsrldq": 1,
+        "vpsubq": 2
+      },
+      "stack_reference_sites": 4
+    },
+    "1": {
+      "static_vector_sites": 3,
+      "instructions": {
+        "vpslld": 1,
+        "vpsrad": 1,
+        "vpmovsxdq": 1
+      },
+      "stack_reference_sites": 0
+    }
+  },
+  "native": {
+    "zero_spill_records": 15,
+    "cubin_sha256": "913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463",
+    "cubin_bytes": 476832,
+    "prepare_LTC64B": 5,
+    "prepare_registers": 128,
+    "finish_registers": 64
+  }
+}

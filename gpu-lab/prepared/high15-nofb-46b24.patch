@@ -1,0 +1,78 @@
+diff --git a/candidates/pinning/GLVScalar.cuh b/candidates/pinning/GLVScalar.cuh
+index e1be6ff..db48740 100644
+--- a/candidates/pinning/GLVScalar.cuh
++++ b/candidates/pinning/GLVScalar.cuh
+@@ -629,6 +629,12 @@ __device__ __forceinline__ uint64_t q9_madw(uint32_t a,uint32_t b,uint64_t c){
+ #if QSB_GLV_HIGH15 != 0 && QSB_GLV_HIGH15 != 1
+ #error QSB_GLV_HIGH15 must be 0 or 1
+ #endif
++#ifndef QSB_HIGH15_NOFB
++#define QSB_HIGH15_NOFB 1
++#endif
++#if QSB_HIGH15_NOFB != 0 && QSB_HIGH15_NOFB != 1
++#error "QSB_HIGH15_NOFB must be 0 or 1"
++#endif
+ 
+ /* Exact original reference and rare out-of-line wrapper. q9_coeff_high15 computes only product
+  * diagonals 10..14. The fixed omitted low part is too small to change the
+@@ -779,9 +785,13 @@ __device__ __forceinline__ void q9_coeff_high15(uint64_t out[2],const uint64_t k
+     w14=(uint32_t)acc;w15=(uint32_t)(acc>>32);
+     (void)w10;
+ 
++#if QSB_HIGH15_NOFB
++    {
++#else
+     constexpr uint32_t guard=(QSB_GLV_HIGH10_HI && QSB_GLV_LEAN)
+         ? (WHICH==1 ? 0x7ffffff7U : 0x7ffffff8U) : FALLBACK_WORD;
+     if(w11<guard || w11>=0x80000000U){
++#endif
+         uint64_t lo=(uint64_t)w12|((uint64_t)w13<<32);
+         uint64_t hi=(uint64_t)w14|((uint64_t)w15<<32);
+ #if QSB_GLV_RND
+@@ -795,10 +805,13 @@ __device__ __forceinline__ void q9_coeff_high15(uint64_t out[2],const uint64_t k
+         const uint64_t round=(uint64_t)(w11>>31);
+         q9_round_coeff(out,lo,hi,round);
+ #endif
+-    }else{
++    }
++#if !QSB_HIGH15_NOFB
++    else{
+         ulonglong2 r=q9_coeff_fallback<WHICH>(k[0],k[1],k[2],k[3]);
+         out[0]=r.x;out[1]=r.y;
+     }
++#endif
+ }
+ 
+ __device__ __forceinline__ void q9_coeff_g1(uint64_t out[2],const uint64_t k[4],const uint64_t g[4]){
+diff --git a/candidates/pinning/build_carrier.sh b/candidates/pinning/build_carrier.sh
+index 25c0849..6f0cb60 100755
+--- a/candidates/pinning/build_carrier.sh
++++ b/candidates/pinning/build_carrier.sh
+@@ -10,7 +10,10 @@ W=$(mktemp -d)   # logs and the raw cubin stay out of the submission directory
+ nvcc -O3 -DQSB_ZEROS_N="$Z" -DQSB_CARRIER_BUILD=1 -arch=sm_89 -cubin \
+      -Xptxas -v -o "$W/c.cubin" pinning.cu 2> "$W/ptxas.log"
+ cuobjdump -symbols "$W/c.cubin" > "$W/symbols.txt"
+-cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"
++if ! cuobjdump -sass "$W/c.cubin" > "$W/sass.txt"; then
++    echo "cuobjdump disassembly failed; checking the same cubin with nvdisasm" >&2
++    nvdisasm "$W/c.cubin" > "$W/sass.txt"
++fi
+ python3 - "$Z" "$W" <<'PY'
+ import base64, hashlib, re, sys
+ zeros = int(sys.argv[1]); W = sys.argv[2]
+@@ -42,8 +45,13 @@ for g in ("qsb_carrier_zeros", "pin_u2rx_words", "pin_u2ry_words", "pin_iso_invu
+         sys.exit(f"build_carrier: global {g} missing from image")
+ # The hint must be present in the prepare kernel (the only table reader on the hot path).
+ sass = open(W + "/sass.txt").read()
+-fn = re.split(r"\n\s*Function : ", sass)
+-s0 = [b for b in fn if b.startswith(names[0])]
++if "Function : " in sass:
++    fn = re.split(r"\n\s*Function : ", sass)
++    s0 = [b for b in fn if b.startswith(names[0] + "\n") or b.startswith(names[0] + " ")]
++else:
++    sections = re.split(r'(?m)^\s*\.section\s+\.text\.([^,\s]+),[^\n]*\n', sass)
++    s0 = [sections[i + 1] for i in range(1, len(sections) - 1, 2)
++          if sections[i] == names[0]]
+ if not s0 or "LTC64B" not in s0[0]:
+     sys.exit("build_carrier: prepare kernel has no LDG.E.LTC64B load")
+ n_hint = s0[0].count("LTC64B")
