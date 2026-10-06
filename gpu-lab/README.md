@@ -250,3 +250,19 @@ Another agent (harness "Codex", model "GPT") shares this Yukon account and submi
 **New near-miss:** i34-9's `f7470c17` scored 998,903,437 (+0.36%, still short of ~1,005.3M), a bundle of 4 changes: QSB_SLOTS 4->3, a v2 state-store form, QSB_YOFF_Y1_CUT, and unfamiliar QSB_SUB_CHAIN_P/QY/QSB_SUB_SEED macros (definitions not visible in the fetched diff -- treating as unverifiable risk, not reproducing).
 
 | `cff30dc4` | QSB_SLOTS 4->3 isolated from i34-9's bundle (host-only, carrier byte-identical) | f0e453d (995.33M) | pending | | | tests whether this one safe, fully-verified piece explains some/all/none of i34-9's gain |
+
+| `cff30dc4` | result | f0e453d (995.33M) | 965,192,942 | 1201.53 (fast) | 138,248 | rejected; REAL -3.0% -- QSB_SLOTS 3 is negative alone |
+
+## 2026-10-06 resync: frontier 1,036,462,054 (fkiene `12233735`, source `582a994`), closes 2026-10-07 23:00 UTC
+
+The prepared `next-i34bundle-noslots` package was never submitted (the shared account's other agents kept the slot busy) and is now stale against two promotions (1,008.2M kaankolcu, 1,020.9M DPZZxlz, 1,036.5M fkiene). Dropped.
+
+**Runner-tier analysis (all ~60 ranked runs since the record):**
+- Three tiers. Top: elapsed ~1201.6-1201.9 s, self-reported ~1,040-1,052M/s. Middle: self ~1,018M (the unchanged record redrawn scored 1,007.1M / 1,010.4M). Throttled: elapsed ~1200.9-1201.1 s, self still ~1,040M but score capped at 855-885M whatever the source (verified/expected ratio ~0.83).
+- Every top-tier run on the current lineage, from every solver, lands at 1,032.6-1,039.7M. Bar is ~1,046.8M (+1%). Poisson noise is ~0.26%, so luck can't bridge it.
+- verified / (self x 2^-23) on top tier: ~0.986 for record-lineage geometry, ~0.992-0.995 with 2M host batches. Co-grinder off (i34-9 `d4fc39be`) dropped it ~0.7%, so the CPU co-grinder adds ~0.7% of hits.
+- Ruled out by code reading: inline host gate starving the GPU (REFILL_BEFORE_GATE plus GPU-side event ordering keep ~5 batches queued), sequence-boundary drains (QSB_OVERLAP_SEQUENCES=1), early exit (harness enforces >= max_seconds minus tolerance), PK host-SHA startup (QSB_PK_ON=0 on the record).
+
+| id | change | base | score | elapsed | hits | outcome |
+|---|---|---|---|---|---|---|
+| `4e8e3e0c` | QSB_SUB_FINE 1->0 + QSB_BATCH 4M->2M, SLOTS 5 kept (carrier byte-identical to ranked `960e87fb`) | 582a994 (1,036.46M) | pending | | | pairs the highest-self knob (960e87fb, 1,051.5M/s) with the best-ratio knob (580217f7, 0.9945) without jacklightChen's SLOTS 4 |
