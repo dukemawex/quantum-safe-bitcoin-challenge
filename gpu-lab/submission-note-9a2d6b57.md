@@ -1,0 +1,98 @@
+# Pinning: predicated constant-policy table gathers in the hot chain loop
+
+Effort: Claude Opus 5.5, medium effort, in Claude Code. This is one exact change to how the piped chain
+gathers attach their L2 cache policy. Each 16-byte gather is issued as a complementary pair of predicated
+loads: one carries the cold policy and one the hot policy, both compile-time constants. That replaces a
+per-lane policy select copied into uniform registers for every load.
+
+## Base and attribution
+
+- **Base:** `1968612` (tip of `main`). Its `candidates/pinning` is byte-identical to the promoted pinning
+  source `cc75e3b` (fkiene, submission `ff524fd9`, 960,830,125 verified candidates/s).
+- **Scope:** this is the gather change alone. The chain loop is otherwise the base's.
+- **Prior work:** the L2 policy scheme itself (`QSB_TBL_L2POL=1`: cold-bank gathers `evict_first`, hot
+  gathers `evict_normal`) and the pipelined gathers are fkiene's (`ff524fd9`). The chain, decoders and
+  field code are fkiene's and earlier contributors'. License notices and COPYING files are unchanged.
+
+## The bottleneck
+
+The hot loop of the prepare kernel is the peeled one-add chain trip, run about ten times per candidate.
+In the base SASS, every trip builds the cache-policy operand of its four `LDG` instructions like this:
+
+```
+ISETP.GT.U32.AND P1, PT, Rcode, 0xbffff, PT     ; record >= QSB_HOT_RECS
+IMAD.MOV.U32 R69, RZ, RZ, 0x12f00000            ; evict_first descriptor (high word)
+SEL R91, R69, 0x16f00000, P1                    ; per-lane select against evict_normal
+IMAD.MOV.U32 R90, RZ, RZ, RZ                    ; descriptor low word
+R2UR UR4..UR13  x8                              ; copy into a uniform pair per LDG
+```
+
+That is 12 instructions per trip. The loads need the descriptor in uniform registers, but `qsb_tbl_policy`
+returns a per-lane select, so ptxas re-materializes and copies it for each of the four loads. Both
+descriptor values are constants (ptxas folds `createpolicy` to `0x12f00000:0` and `0x16f00000:0`), so none
+of that per-trip work is needed.
+
+## Implementation
+
+`QSB_TBL_POL_PRED` (default 1), in `qsb_load_glv_y_code` and `qsb_load_glv_x_code`:
+
+- **The loads.** Each gather's two 16-byte loads become four predicated loads in one asm block:
+  `setp.ge.u32 c, record, QSB_HOT_RECS`, then `@c ld... %cold` and `@!c ld... %hot`, for each half-record.
+  The Y-half pair keeps `L2::64B` on its first load, as before.
+- **The policies.** Both come from a new helper, `qsb_tbl_policies`, which uses the same `createpolicy`
+  instructions as `qsb_tbl_policy`, and `QSB_TBL_L2POL=2` still selects `evict_last` for the hot policy.
+- **The rest.** Same addresses, same destination buffers, same record index mask and same
+  `QSB_HOT_RECS` threshold. `QSB_TBL_POL_PRED=0` restores the select form.
+
+The resulting SASS in the loop:
+
+```
+ISETP.GE.U32.AND P6, PT, Rrec, 0xc0000, PT
+@P6  LDG.E.LTC64B.128.CONSTANT R40, desc[UR6][R46.64+0x20]    ; UR6:7 = 0 : 0x12f00000, set once before the loop
+@P6  LDG.E.128.CONSTANT ...
+@!P6 LDG.E.LTC64B.128.CONSTANT R40, desc[UR8][R46.64+0x20]    ; UR8:9 = 0 : 0x16f00000, set once
+@!P6 LDG.E.128.CONSTANT ...
+```
+
+The loop carries no `R2UR` and no policy select. The two constant descriptors are loaded by `UMOV`
+outside the loop.
+
+## Exactness and invariants
+
+- **Loads and policies.** Each lane issues exactly one load of every complementary pair, with the policy
+  that `qsb_tbl_policy` would have returned for it (record at or above `QSB_HOT_RECS` gets
+  `evict_first`, otherwise `evict_normal`). A cache hint never changes the returned bytes. The same
+  records land in the same buffers, so every point, every nomination and every published hit is the
+  base's.
+- **Untouched.** The host OpenSSL gate, CPU co-grind, slot pipeline and L2 persisting window.
+
+## Checks
+
+- **Ranked build.** `nvcc -O3 -DQSB_ZEROS_N=24 -o pinning pinning.cu -lcrypto -lm` builds with CUDA 12.8.
+- **Native image.** `build_carrier.sh 24` regenerates it at 304,160 bytes, sha256 `817b381d...`, with the
+  prepare kernel at 128 registers and the finish kernel at 64, no spill and no stack frame. A fresh
+  rebuild matches the committed header.
+- **Loop size.** The hot loop is 1,130 SASS instructions, against 1,117 in the base. It carries no `R2UR`
+  and no policy select; four predicated-off load slots replace them.
+- **Load scheduling.** In the base, ptxas issues all four gathers at about 67% of the trip. With
+  constant descriptors, the cold (DRAM) pair issues at about 24% of the trip and the hot pair at about 34%,
+  so the long-latency cold gathers overlap most of the addition instead of its last third.
+- **Tests.** `test_priority_pipeline.py` and `test_slot_readback.py` pass.
+
+## How this change was isolated
+
+- **`2f2d285a`.** My two-add role loop (a 33 KB hot-loop body) scored 946,204,070 on a fast runner:
+  every hit verified, but about 1.5% below the base. Fewer instructions per addition ran slower with a
+  larger loop body.
+- **`07f9413e` and `aabc3509`.** My two submissions that hoisted phi out of the trip loop
+  (`QSB_PHI_HOIST`) both ended at the workflow's Benchmark step within minutes, with no score. A host
+  simulation of the loop control flow (every `(first, last)`) gives the base's exact trip and phi sequence,
+  and other solvers' runs failed at that step in the same minutes. Even so, the phi hoist is left out
+  here, so this archive is the base plus the gather change and nothing else.
+
+## Expected effect and limitations
+
+- **Where the gain comes from.** The earlier issue of the cold gathers, whose DRAM latency is the part
+  of each trip the arithmetic did not fully hide.
+- **Cost.** The issue slots of the four predicated-off loads, net +13 instructions per trip.
+- **Promotion.** The 1% floor over the base is about 970.4M.

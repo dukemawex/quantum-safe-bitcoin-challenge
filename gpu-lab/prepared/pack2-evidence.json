@@ -1,0 +1,25 @@
+{
+  "input_pairs": 10018,
+  "mappings_per_pair": 2,
+  "mapping": "plus four lanes then minus four lanes; low/high dwords separated",
+  "old": {
+    "instruction_sites": {
+      "vmovdqa": 13,
+      "vmovdqu64": 8,
+      "vpblendd": 9,
+      "vpermd": 18,
+      "vzeroupper": 2
+    },
+    "stack_references": 14
+  },
+  "new": {
+    "instruction_sites": {
+      "vmovdqa": 21,
+      "vmovdqu64": 8,
+      "vpermi2d": 2,
+      "vpermt2d": 7,
+      "vzeroupper": 2
+    },
+    "stack_references": 14
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "base": "ff27a2b66990a3eb554a1d4453e896c0397337ba",
+  "native_exit": 0,
+  "host_exit": 0,
+  "zero_spill_records": 15,
+  "prepare_registers": 128,
+  "finish_registers": 64,
+  "LTC64B": 5,
+  "cubin_bytes": 476832,
+  "cubin_sha256": "913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463",
+  "image_matches_promoted": true,
+  "model": {
+    "four_lane_groups": 20026,
+    "limb_vectors": 80104,
+    "all_16_predicate_masks": true,
+    "correction_counts": [
+      80052,
+      52
+    ],
+    "compared": "original and new canonical normalization and bigint mod p",
+    "target_execution": false
+  },
+  "static": {
+    "0": {
+      "instructions": {
+        "endbr64": 1,
+        "movabsq": 4,
+        "vmovdqa": 7,
+        "vpsrlq": 10,
+        "vpbroadcastq": 5,
+        "vpand": 12,
+        "vpmadd52luq": 1,
+        "vpaddq": 9,
+        "movl": 1,
+        "vpcmpgtq": 1,
+        "vpternlogq": 2,
+        "vpcmpeqq": 2,
+        "vpor": 1,
+        "vpxor": 1,
+        "vpsubq": 1,
+        "vzeroupper": 1,
+        "ret": 1
+      },
+      "stack_sites": 0
+    },
+    "1": {
+      "instructions": {
+        "endbr64": 1,
+        "movabsq": 4,
+        "vmovdqa": 7,
+        "vpsrlq": 10,
+        "vpbroadcastq": 5,
+        "vpand": 11,
+        "vpmadd52luq": 1,
+        "vpaddq": 9,
+        "movl": 1,
+        "vpcmpq": 2,
+        "vpternlogq": 1,
+        "vpcmpuq": 1,
+        "vpor": 1,
+        "vpxor": 1,
+        "vpsubq": 1,
+        "vzeroupper": 1,
+        "ret": 1
+      },
+      "stack_sites": 0
+    }
+  },
+  "local_target_execution": false,
+  "measured_gain": null
+}

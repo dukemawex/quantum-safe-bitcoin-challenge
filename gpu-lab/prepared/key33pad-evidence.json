@@ -1,0 +1,26 @@
+{
+  "model_messages": 2052,
+  "model_scope": "actual macro ordering grouped recurrence and full scalar digest/hashlib; not target SIMD execution",
+  "static_actual_function_sites": {
+    "old": {
+      "sha256msg1": 24,
+      "sha256msg2": 24,
+      "sha256rnds2": 64,
+      "palignr": 25,
+      "paddd": 58,
+      "movdqa": 113,
+      "stack_reference_sites": 13
+    },
+    "new": {
+      "sha256msg1": 22,
+      "sha256msg2": 24,
+      "sha256rnds2": 64,
+      "palignr": 23,
+      "paddd": 56,
+      "movdqa": 109,
+      "stack_reference_sites": 3
+    }
+  },
+  "generic_wrapper_normalized_equal": true,
+  "runtime_measured": false
+}

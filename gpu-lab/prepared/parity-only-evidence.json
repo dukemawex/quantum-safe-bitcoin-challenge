@@ -1,0 +1,65 @@
+{
+  "model": {
+    "limb_cases": 20010,
+    "correction_counts": [
+      20005,
+      5
+    ],
+    "scope": "scalar integer normalized parity versus full correction and bigint modulo p; no IFMA execution",
+    "runtime_measured": false
+  },
+  "static": {
+    "0": {
+      "instructions": {
+        "endbr64": 1,
+        "movabsq": 4,
+        "vmovdqa": 1,
+        "vpsrlq": 6,
+        "vpbroadcastq": 5,
+        "vpand": 6,
+        "vpmadd52luq": 1,
+        "vpaddq": 5,
+        "vpternlogq": 2,
+        "vpcmpeqq": 2,
+        "movl": 1,
+        "vpcmpgtq": 1,
+        "vpxor": 1,
+        "vpor": 1,
+        "vpsubq": 1,
+        "ret": 1
+      },
+      "stack_references": 0
+    },
+    "1": {
+      "instructions": {
+        "endbr64": 1,
+        "movabsq": 4,
+        "vmovdqa": 1,
+        "vpsrlq": 6,
+        "vpbroadcastq": 5,
+        "vpand": 5,
+        "vpmadd52luq": 1,
+        "vpaddq": 4,
+        "vpternlogq": 3,
+        "vpcmpeqq": 2,
+        "movl": 1,
+        "vpcmpgtq": 1,
+        "ret": 1
+      },
+      "stack_references": 0
+    }
+  },
+  "build": {
+    "native_exit": 0,
+    "host_exit": 0,
+    "cuda": "12.8.93",
+    "spill_records": 15,
+    "spill_stores": 0,
+    "spill_loads": 0,
+    "ltc64b": 5,
+    "cubin_bytes": 476832,
+    "cubin_sha256": "913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463",
+    "raw_log": "/tmp/tmp.eCESkdlny9/ptxas.log"
+  },
+  "runtime_measured": false
+}

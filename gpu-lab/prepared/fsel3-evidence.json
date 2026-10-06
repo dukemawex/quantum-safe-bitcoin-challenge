@@ -1,0 +1,23 @@
+{
+  "model": "bit truth table and four-lane byte-blend equivalence; not SIMD execution",
+  "truth_cases": 8,
+  "four_lane_cases": 10032,
+  "all_lane_masks": 16,
+  "static_wrapper_sites": {
+    "old": {
+      "vmovdqa": 11,
+      "vpblendvb": 5,
+      "vpcmpgtb": 1,
+      "vpxor": 1,
+      "stack_reference_sites": 0,
+      "total_vector_sites": 18
+    },
+    "new": {
+      "vmovdqa": 14,
+      "vpternlogq": 5,
+      "stack_reference_sites": 0,
+      "total_vector_sites": 19
+    }
+  },
+  "runtime_measured": false
+}

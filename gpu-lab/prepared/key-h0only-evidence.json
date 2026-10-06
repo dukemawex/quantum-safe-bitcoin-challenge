@@ -1,0 +1,84 @@
+{
+  "model": {
+    "cases": 20004,
+    "scope": "arbitrary state feed-forward and A lane extraction; no SHA-NI execution",
+    "runtime_measured": false,
+    "generic_assembly_equal_after_label_normalization": true,
+    "compression_round_and_schedule_body_text_equal": true
+  },
+  "static": {
+    "0": {
+      "instructions": {
+        "subq": 2,
+        "movdqa": 113,
+        "movq": 8,
+        "pblendw": 3,
+        "palignr": 25,
+        "movaps": 1,
+        "leaq": 1,
+        "movd": 8,
+        "pinsrd": 8,
+        "movl": 6,
+        "addq": 3,
+        "punpcklqdq": 4,
+        "paddd": 58,
+        "sha256msg1": 24,
+        "sha256rnds2": 64,
+        "pshufd": 34,
+        "sha256msg2": 24,
+        "punpckldq": 1,
+        "cmpq": 1,
+        "jne": 2,
+        "ret": 1,
+        "call": 1,
+        "endbr64": 1,
+        "jmp": 1
+      },
+      "stack_references": 13
+    },
+    "1": {
+      "instructions": {
+        "subq": 2,
+        "movdqa": 113,
+        "movq": 6,
+        "palignr": 25,
+        "pblendw": 1,
+        "movaps": 2,
+        "leaq": 1,
+        "movd": 8,
+        "addq": 3,
+        "pinsrd": 8,
+        "movl": 8,
+        "punpcklqdq": 4,
+        "paddd": 54,
+        "sha256msg1": 24,
+        "sha256rnds2": 64,
+        "pshufd": 30,
+        "sha256msg2": 24,
+        "pextrd": 2,
+        "addl": 2,
+        "cmpq": 1,
+        "jne": 2,
+        "ret": 1,
+        "call": 1,
+        "endbr64": 1,
+        "jmp": 1
+      },
+      "stack_references": 14
+    }
+  },
+  "build": {
+    "native_exit": 0,
+    "host_exit": 0,
+    "cuda": "12.8.93",
+    "spill_records": 15,
+    "zero_spill": true,
+    "prepare_regs": 128,
+    "finish_regs": 64,
+    "ltc64b": 5,
+    "cubin_bytes": 476832,
+    "cubin_sha256": "913a97b2a8e6354e7632a2f41a997a05bf0e61e5a8b9a5c5c793f931e983b463",
+    "raw_log": "/tmp/tmp.g9fuT3iazr/ptxas.log"
+  },
+  "runtime_measured": false
+}
